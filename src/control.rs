@@ -1,4 +1,6 @@
-use crate::*;
+use std::sync::Arc;
+
+use crate::{entities::EntityStatusPointer, *};
 use bevy::prelude::*;
 
 pub struct ControlPlugin;
@@ -11,9 +13,14 @@ impl Plugin for ControlPlugin {
 
 fn control(
     keys: Res<Input<KeyCode>>,
-    mut query_main_player_status: Query<&mut entities::EntityStatus, With<player::GameMainPlayer>>,
+    mut query_main_player_status: Query<&mut entities::EntityStatusPointer, With<player::MainPlayer>>,
 ) {
-    let mut status = query_main_player_status.get_single_mut().expect("Not exactly one player!");
+    // Unwrap the Arc into mutable reference. 
+    let status_pointer: &mut EntityStatusPointer = &mut query_main_player_status
+        .get_single_mut()
+        .expect("Not exactly one player!");
+    let mut status = status_pointer.pointer.lock().unwrap();
+    // Operate the status. 
     status.velocity.x = 0.;
     status.velocity.z = 0.;
     if keys.pressed(KeyCode::W) {

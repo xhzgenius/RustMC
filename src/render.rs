@@ -1,6 +1,9 @@
 use crate::*;
+use bevy::ecs::system::EntityCommands;
 use bevy::gltf::Gltf;
 use bevy::prelude::*;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 pub struct RenderPlugin;
 
@@ -26,51 +29,6 @@ fn player_starting_transform() -> Transform {
 }
 
 /**
- The player's starting status. Can be configured.
- TODO: Save the player's status in the save.
-*/
-fn player_starting_status() -> entities::EntityStatus {
-    return entities::EntityStatus {
-        health: 20,
-        velocity: Vec3::new(0., 0., 0.),
-    };
-}
-
-/**
-Spawn all gltf(*.glb) entities.
-*/
-fn load_gltf_object(commands: &mut Commands, asset_server: &Res<AssetServer>) {
-    let path_creeper = "models/minecraft_creeper.glb#Scene0";
-    let path_steve = "models/minecraft_steve.glb#Scene0";
-    let path_torch = "models/minecraft_torch.glb#Scene0";
-    let transform = Transform::from_xyz(10., gamemap::CHUNK_HEIGHT as f32 / 2. + 1., 5.)
-        .with_scale(Vec3::new(0.1, 0.1, 0.1));
-    let transform2 = Transform::from_xyz(5., gamemap::CHUNK_HEIGHT as f32 / 2. + 1., 10.)
-        .with_scale(Vec3::new(0.1, 0.1, 0.1));
-    let transform3 = Transform::from_xyz(5., gamemap::CHUNK_HEIGHT as f32 / 2., 5.)
-        .with_scale(Vec3::new(0.5, 0.5, 0.5));
-    let gltf_creeper: Handle<Scene> = asset_server.load(path_creeper);
-    let gltf_steve: Handle<Scene> = asset_server.load(path_steve);
-    let gltf_torch: Handle<Scene> = asset_server.load(path_torch);
-    // spawn the first scene in the file
-    commands.spawn(SceneBundle {
-        scene: gltf_creeper,
-        transform: transform.clone(),
-        ..default()
-    });
-    commands.spawn(SceneBundle {
-        scene: gltf_steve,
-        transform: transform2.clone(),
-        ..default()
-    });
-    commands.spawn(SceneBundle {
-        scene: gltf_torch,
-        transform: transform3.clone(),
-        ..default()
-    });
-}
-
-/**
  Initialize the whole scene in the game, in other words, load all blocks and entities.
 */
 fn init_blocks_and_entities(
@@ -78,19 +36,24 @@ fn init_blocks_and_entities(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    game_map: Res<gamemap::GameMap>,
+    mut game_map: Res<gamemap::GameMap>,
 ) {
     // Prepare model for a block.
     let block_mesh = meshes.add(shape::Cube { size: 1.0 }.into());
     // Prepare material for every kind of blocks.
-    let block_materials = load_block_textures(&asset_server, materials);
+    let block_materials: Vec<Handle<StandardMaterial>> =
+        load_block_textures(&asset_server, materials);
+    let entity_models: HashMap<String, Handle<Scene>> = load_entity_models(&asset_server);
+
     // Spawn all blocks in the gamemap.
     for &(chunks_x, chunks_z) in game_map.map.keys() {
+        let chunk = &game_map.map[&(chunks_x, chunks_z)];
+        let chunk_blocks = chunk.blocks.lock().unwrap();
         for x in 0..gamemap::CHUNK_SIZE {
             for y in 0..gamemap::CHUNK_HEIGHT {
                 for z in 0..gamemap::CHUNK_SIZE {
-                    let block_id = game_map.map[&(chunks_x, chunks_z)].get((x, y, z)).unwrap();
-                    if let Some(block_material) = block_materials.get(*block_id as usize) {
+                    let block_id = chunk_blocks[x][y][z];
+                    if let Some(block_material) = block_materials.get(block_id as usize) {
                         commands.spawn((
                             blocks::Block,
                             PbrBundle {
@@ -111,19 +74,42 @@ fn init_blocks_and_entities(
     }
 
     // Spawn all entities in the scene.
-    // Spawn the player.
-    commands.spawn((
-        player::GamePlayer,
-        player::GameMainPlayer,
-        entities::Entity,
-        player_starting_status(),
-        PbrBundle {
-            transform: player_starting_transform(),
-            ..default()
-        },
-    ));
-    // Try to spawn something in gltf
-    load_gltf_object(&mut commands, &asset_server);
+    for &(chunks_x, chunks_z) in game_map.map.keys() {
+        let chunk = &game_map.map[&(chunks_x, chunks_z)];
+        for entity_status_locked in &chunk.entities {
+            let mut entity_status = entity_status_locked.lock().unwrap();
+            let mut entity_transform: Transform =
+                Transform::from_translation(entity_status.position)
+                    .with_scale(entity_status.scaling);
+            entity_transform.rotate_y(entity_status.rotation);
+            let entity_model_name = match find_model_name_by_type(&entity_status.entity_type) {
+                Some(model_name) => model_name,
+                None => panic!(
+                    "{}",
+                    format!(
+                        "Model not found for entity type {}! ",
+                        entity_status.entity_type
+                    )
+                ),
+            };
+            let mut entity_commands = commands.spawn((
+                entities::Entity,
+                entities::EntityStatusPointer {
+                    pointer: Arc::clone(entity_status_locked),
+                },
+                SceneBundle {
+                    scene: entity_models
+                        .get(entity_model_name)
+                        .expect(&format!("Model not loaded: {}", entity_model_name))
+                        .clone(),
+                    transform: entity_transform,
+                    ..default()
+                },
+            ));
+            insert_entity_tags(&mut entity_commands, &entity_status.entity_type);
+
+        }
+    }
 
     // Spawn the sunlight.
     commands.spawn(DirectionalLightBundle {
@@ -149,19 +135,21 @@ fn setup_camera(mut commands: Commands) {
 */
 fn update_camera(
     mut query_camera: Query<&mut GlobalTransform, With<GameCamera>>,
-    query_main_player: Query<&GlobalTransform, (With<player::GameMainPlayer>, Without<GameCamera>)>,
+    query_main_player: Query<&GlobalTransform, (With<player::MainPlayer>, Without<GameCamera>)>,
 ) {
     let mut camera_transform = query_camera
         .get_single_mut()
         .expect("Not exactly one camera!");
+    // TODO: use two cameras: 1st point of view and third person camera.
     let player_transform = query_main_player
         .get_single()
-        .expect("Not exactly one player!");
+        .expect("Not exactly one main player!");
+    // I think panic here is necessary, because this should never happen. --XHZ
     camera_transform.clone_from(player_transform); // Set the camera transform equal to the player transform
 }
 
 /**
- Load textures of every kind of block.
+ Load textures of every kind of blocks.
 */
 fn load_block_textures(
     asset_server: &Res<AssetServer>,
@@ -169,6 +157,7 @@ fn load_block_textures(
 ) -> Vec<Handle<StandardMaterial>> {
     let block_textures = asset_server.load_folder("blocks")
         .expect("Failed to load block texture. Please eusure that block texture is in ./assets/blocks/ folder. ");
+    // I think panic here is necessary. --XHZ
     let mut block_materials: Vec<Handle<StandardMaterial>> = Vec::new();
     for block_texture in block_textures {
         block_materials.push(materials.add(StandardMaterial {
@@ -177,4 +166,38 @@ fn load_block_textures(
         }));
     }
     return block_materials;
+}
+
+/**
+ Load models (including meshes and textures) of every kind of entities.
+*/
+fn load_entity_models(asset_server: &Res<AssetServer>) -> HashMap<String, Handle<Scene>> {
+    let mut entity_models: HashMap<String, Handle<Scene>> = HashMap::new();
+    for model_name in walkdir::WalkDir::new("./assets/models/") {
+        let model_name = format!("{}", model_name.unwrap().file_name().to_str().unwrap());
+        let model_path = format!("models/{}#Scene0", model_name.clone());
+        let model: Handle<Scene> = asset_server.load(model_path);
+        entity_models.insert(model_name, model);
+    }
+    return entity_models;
+}
+
+fn find_model_name_by_type(model_type: &str) -> Option<&str> {
+    match model_type {
+        "Creeper" => Some("minecraft_creeper.glb"),
+        "Player" => Some("minecraft_steve.glb"),
+        "MainPlayer" => Some("minecraft_steve.glb"),
+        "Torch" => Some("minecraft_torch.glb"),
+        _ => None,
+    }
+}
+
+fn insert_entity_tags(entity_commands: &mut EntityCommands, entity_type: &str) {
+    match entity_type {
+        "MainPlayer" => entity_commands.insert((entities::Entity, player::Player, player::MainPlayer)),
+        "Player" => entity_commands.insert((entities::Entity, player::Player)),
+        "Creeper" => entity_commands.insert((entities::Entity, entities::Creeper)), 
+        "Torch" => entity_commands.insert((entities::Entity, entities::Torch)), 
+        _ => entity_commands
+    };
 }

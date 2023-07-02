@@ -10,9 +10,10 @@ use bevy::prelude::*;
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
+    app.insert_resource(gamemap::new_gamemap());
     app.add_plugin(render::RenderPlugin);
     app.add_plugin(entities::EntityUpdatePlugin);
     app.add_plugin(control::ControlPlugin);
-    app.insert_resource(gamemap::load_gamemap(""));
+    // app.insert_resource(gamemap::load_gamemap(""));
     app.run();
 }
