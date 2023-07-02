@@ -167,7 +167,8 @@ fn load_block_textures(
     asset_server: &Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> Vec<Handle<StandardMaterial>> {
-    let block_textures = asset_server.load_folder("blocks").unwrap();
+    let block_textures = asset_server.load_folder("blocks")
+        .expect("Failed to load block texture. Please eusure that block texture is in ./assets/blocks/ folder. ");
     let mut block_materials: Vec<Handle<StandardMaterial>> = Vec::new();
     for block_texture in block_textures {
         block_materials.push(materials.add(StandardMaterial {
