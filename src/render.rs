@@ -1,4 +1,5 @@
 use crate::*;
+use bevy::gltf::Gltf;
 use bevy::prelude::*;
 
 pub struct RenderPlugin;
@@ -12,7 +13,65 @@ impl Plugin for RenderPlugin {
 }
 
 /**
-Initialize the whole scene in the game, in other words, load all blocks and entities.
+ The player's starting transform. Can be configured.
+ TODO: Save the player's starting transform in the save.
+*/
+fn player_starting_transform() -> Transform {
+    let mut transform = Transform::from_xyz(0., gamemap::CHUNK_HEIGHT as f32 / 2. + 5., 0.);
+    transform.look_at(
+        Vec3::new(20., gamemap::CHUNK_HEIGHT as f32 / 2. - 5., 10.),
+        Vec3::new(0., 1., 0.),
+    );
+    return transform;
+}
+
+/**
+ The player's starting status. Can be configured.
+ TODO: Save the player's status in the save.
+*/
+fn player_starting_status() -> entities::EntityStatus {
+    return entities::EntityStatus {
+        health: 20,
+        velocity: Vec3::new(0., 0., 0.),
+    };
+}
+
+/**
+Spawn all gltf(*.glb) entities.
+*/
+fn load_gltf_object(commands: &mut Commands, asset_server: &Res<AssetServer>) {
+    let path_creeper = "models/minecraft_creeper.glb#Scene0";
+    let path_steve = "models/minecraft_steve.glb#Scene0";
+    let path_torch = "models/minecraft_torch.glb#Scene0";
+    let transform = Transform::from_xyz(10., gamemap::CHUNK_HEIGHT as f32 / 2. + 1., 5.)
+        .with_scale(Vec3::new(0.1, 0.1, 0.1));
+    let transform2 = Transform::from_xyz(5., gamemap::CHUNK_HEIGHT as f32 / 2. + 1., 10.)
+        .with_scale(Vec3::new(0.1, 0.1, 0.1));
+    let transform3 = Transform::from_xyz(5., gamemap::CHUNK_HEIGHT as f32 / 2., 5.)
+        .with_scale(Vec3::new(0.5, 0.5, 0.5));
+    let gltf_creeper: Handle<Scene> = asset_server.load(path_creeper);
+    let gltf_steve: Handle<Scene> = asset_server.load(path_steve);
+    let gltf_torch: Handle<Scene> = asset_server.load(path_torch);
+    // spawn the first scene in the file
+    commands.spawn(SceneBundle {
+        scene: gltf_creeper,
+        transform: transform.clone(),
+        ..default()
+    });
+    commands.spawn(SceneBundle {
+        scene: gltf_steve,
+        transform: transform2.clone(),
+        ..default()
+    });
+    commands.spawn(SceneBundle {
+        scene: gltf_torch,
+        transform: transform3.clone(),
+        ..default()
+    });
+}
+
+/**
+ Initialize the whole scene in the game, in other words, load all blocks and entities.
 */
 fn init_blocks_and_entities(
     mut commands: Commands,
@@ -24,7 +83,8 @@ fn init_blocks_and_entities(
     // Prepare model for a block.
     let block_mesh = meshes.add(shape::Cube { size: 1.0 }.into());
     // Prepare material for every kind of blocks.
-    let block_materials = load_textures(asset_server, materials);
+    let block_materials = load_block_textures(&asset_server, materials);
+    // Spawn all blocks in the gamemap.
     for &(chunks_x, chunks_z) in game_map.map.keys() {
         for x in 0..gamemap::CHUNK_SIZE {
             for y in 0..gamemap::CHUNK_HEIGHT {
@@ -44,39 +104,32 @@ fn init_blocks_and_entities(
                                 ..default()
                             },
                         ));
-                    } // If block_id is negative or out of bound, treat as air. 
+                    } // If block_id is negative or out of bound, treat as air.
                 }
             }
         }
     }
 
-    // Prepare model for the entities in the scene.
-    // Prepare model for the player.
+    // Spawn all entities in the scene.
+    // Spawn the player.
     commands.spawn((
         player::GamePlayer,
         player::GameMainPlayer,
         entities::Entity,
+        player_starting_status(),
         PbrBundle {
-            transform: Transform::from_xyz(0., gamemap::CHUNK_HEIGHT as f32 / 2. + 5., 0.).looking_at(
-                Vec3 {
-                    x: 10.,
-                    y: gamemap::CHUNK_HEIGHT as f32 / 2.,
-                    z: 10.,
-                },
-                Vec3 {
-                    x: 0.,
-                    y: 10.,
-                    z: 0.,
-                },
-            ),
+            transform: player_starting_transform(),
             ..default()
         },
     ));
+    // Try to spawn something in gltf
+    load_gltf_object(&mut commands, &asset_server);
 
-    // Prepare the sunlight.
+    // Spawn the sunlight.
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 30000.,
+            shadows_enabled: true,
             ..default()
         },
         transform: Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
@@ -92,25 +145,26 @@ fn setup_camera(mut commands: Commands) {
 }
 
 /**
-Update the camera per frame, making it consistent with the player.
+ Update the camera per frame, making it consistent with the player.
 */
 fn update_camera(
     mut query_camera: Query<&mut GlobalTransform, With<GameCamera>>,
-    query_player: Query<&GlobalTransform, (With<player::GameMainPlayer>, Without<GameCamera>)>,
+    query_main_player: Query<&GlobalTransform, (With<player::GameMainPlayer>, Without<GameCamera>)>,
 ) {
-    let mut camera_transform = match query_camera.get_single_mut() {
-        Ok(result) => result,
-        Err(_) => panic!("Not exactly one camera!"),
-    };
-    let player_transform = match query_player.get_single() {
-        Ok(result) => result,
-        Err(_) => panic!("Not exactly one player!"),
-    };
+    let mut camera_transform = query_camera
+        .get_single_mut()
+        .expect("Not exactly one camera!");
+    let player_transform = query_main_player
+        .get_single()
+        .expect("Not exactly one player!");
     camera_transform.clone_from(player_transform); // Set the camera transform equal to the player transform
 }
 
-fn load_textures(
-    asset_server: Res<AssetServer>,
+/**
+ Load textures of every kind of block.
+*/
+fn load_block_textures(
+    asset_server: &Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) -> Vec<Handle<StandardMaterial>> {
     let block_textures = asset_server.load_folder("blocks").unwrap();
