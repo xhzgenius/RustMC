@@ -130,7 +130,7 @@ fn update_camera(
         .expect("Not exactly one main player!");
     // I think panic here is necessary, because this should never happen. --XHZ
     camera_transform.clone_from(player_transform); // Set the camera transform equal to the player transform
-    // println!("Transform of camera: {:?}",camera_transform)
+                                                   // println!("Transform of camera: {:?}",camera_transform)
 }
 
 /**

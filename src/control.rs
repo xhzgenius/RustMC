@@ -11,14 +11,17 @@ impl Plugin for ControlPlugin {
 
 fn control(
     keys: Res<Input<KeyCode>>,
-    mut query_main_player_status: Query<&mut entities::EntityStatusPointer, With<player::MainPlayer>>,
+    mut query_main_player_status: Query<
+        &mut entities::EntityStatusPointer,
+        With<player::MainPlayer>,
+    >,
 ) {
-    // Unwrap the Arc into mutable reference. 
+    // Unwrap the Arc into mutable reference.
     let status_pointer: &mut EntityStatusPointer = &mut query_main_player_status
         .get_single_mut()
         .expect("Not exactly one main player!");
     let mut status = status_pointer.pointer.lock().unwrap();
-    // Operate the status. 
+    // Operate the status.
     status.velocity.x = 0.;
     status.velocity.y = 0.;
     status.velocity.z = 0.;

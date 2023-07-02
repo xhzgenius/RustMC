@@ -1,7 +1,10 @@
 use crate::*;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 pub const CHUNK_SIZE: usize = 16;
 pub const CHUNK_HEIGHT: usize = 8;
@@ -54,38 +57,46 @@ pub fn new_gamemap() -> GameMap {
             let mut chunk = flat_chunk();
             if x == 0 && z == 0 {
                 let proper_y: f32 = CHUNK_HEIGHT as f32 / 2. + 2.;
-                chunk.entities.push(Arc::new(Mutex::new(entities::EntityStatus {
-                    entity_type: "MainPlayer".to_string(),
-                    health: 20,
-                    position: Vec3::new(0., proper_y, 0.),
-                    rotation: 0.,
-                    scaling: Vec3::new(0.1, 0.1, 0.1),
-                    velocity: Vec3::new(0., 0., 0.),
-                })));
-                chunk.entities.push(Arc::new(Mutex::new(entities::EntityStatus {
-                    entity_type: "Creeper".to_string(),
-                    health: 20,
-                    position: Vec3::new(5., proper_y, 10.),
-                    rotation: 0.,
-                    scaling: Vec3::new(0.1, 0.1, 0.1),
-                    velocity: Vec3::new(0., 0., 0.),
-                })));
-                chunk.entities.push(Arc::new(Mutex::new(entities::EntityStatus {
-                    entity_type: "Player".to_string(),
-                    health: 20,
-                    position: Vec3::new(10., proper_y, 10.),
-                    rotation: 0.,
-                    scaling: Vec3::new(0.1, 0.1, 0.1),
-                    velocity: Vec3::new(0., 0., 0.),
-                })));
-                chunk.entities.push(Arc::new(Mutex::new(entities::EntityStatus {
-                    entity_type: "Creeper".to_string(),
-                    health: 20,
-                    position: Vec3::new(10., proper_y, 8.),
-                    rotation: 0.,
-                    scaling: Vec3::new(0.1, 0.1, 0.1),
-                    velocity: Vec3::new(0., 0., 0.),
-                })));
+                chunk
+                    .entities
+                    .push(Arc::new(Mutex::new(entities::EntityStatus {
+                        entity_type: "MainPlayer".to_string(),
+                        health: 20,
+                        position: Vec3::new(0., proper_y, 0.),
+                        rotation: 0.,
+                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        velocity: Vec3::new(0., 0., 0.),
+                    })));
+                chunk
+                    .entities
+                    .push(Arc::new(Mutex::new(entities::EntityStatus {
+                        entity_type: "Creeper".to_string(),
+                        health: 20,
+                        position: Vec3::new(5., proper_y, 10.),
+                        rotation: 0.,
+                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        velocity: Vec3::new(0., 0., 0.),
+                    })));
+                chunk
+                    .entities
+                    .push(Arc::new(Mutex::new(entities::EntityStatus {
+                        entity_type: "Player".to_string(),
+                        health: 20,
+                        position: Vec3::new(10., proper_y, 10.),
+                        rotation: 0.,
+                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        velocity: Vec3::new(0., 0., 0.),
+                    })));
+                chunk
+                    .entities
+                    .push(Arc::new(Mutex::new(entities::EntityStatus {
+                        entity_type: "Creeper".to_string(),
+                        health: 20,
+                        position: Vec3::new(10., proper_y, 8.),
+                        rotation: 0.,
+                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        velocity: Vec3::new(0., 0., 0.),
+                    })));
             }
             new_map.insert((x, z), chunk);
         }
