@@ -30,19 +30,21 @@ fn init_blocks_and_entities(
             for y in 0..gamemap::CHUNK_HEIGHT {
                 for z in 0..gamemap::CHUNK_SIZE {
                     let block_id = game_map.map[&(chunks_x, chunks_z)].get((x, y, z)).unwrap();
-                    commands.spawn((
-                        blocks::Block,
-                        PbrBundle {
-                            mesh: block_mesh.clone(),
-                            material: block_materials.get(*block_id as usize).unwrap().clone(),
-                            transform: Transform::from_xyz(
-                                (chunks_x * gamemap::CHUNK_SIZE as i32 + x as i32) as f32,
-                                y as f32,
-                                (chunks_z * gamemap::CHUNK_SIZE as i32 + z as i32) as f32,
-                            ),
-                            ..default()
-                        },
-                    ));
+                    if let Some(block_material) = block_materials.get(*block_id as usize) {
+                        commands.spawn((
+                            blocks::Block,
+                            PbrBundle {
+                                mesh: block_mesh.clone(),
+                                material: block_material.clone(),
+                                transform: Transform::from_xyz(
+                                    (chunks_x * gamemap::CHUNK_SIZE as i32 + x as i32) as f32,
+                                    y as f32,
+                                    (chunks_z * gamemap::CHUNK_SIZE as i32 + z as i32) as f32,
+                                ),
+                                ..default()
+                            },
+                        ));
+                    } // If block_id is negative or out of bound, treat as air. 
                 }
             }
         }
@@ -55,36 +57,31 @@ fn init_blocks_and_entities(
         player::GameMainPlayer,
         entities::Entity,
         PbrBundle {
-            transform: Transform::from_xyz(0., gamemap::CHUNK_HEIGHT as f32 + 5., 0.)
-                .looking_at(
-                    Vec3 {
-                        x: 10.,
-                        y: gamemap::CHUNK_HEIGHT as f32,
-                        z: 10.,
-                    },
-                    Vec3 {
-                        x: 0.,
-                        y: 10.,
-                        z: 0.,
-                    },
-                ),
+            transform: Transform::from_xyz(0., gamemap::CHUNK_HEIGHT as f32 / 2. + 5., 0.).looking_at(
+                Vec3 {
+                    x: 10.,
+                    y: gamemap::CHUNK_HEIGHT as f32 / 2.,
+                    z: 10.,
+                },
+                Vec3 {
+                    x: 0.,
+                    y: 10.,
+                    z: 0.,
+                },
+            ),
             ..default()
         },
     ));
 
     // Prepare the sunlight.
-    commands.spawn(
-        DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                illuminance: 30000.,
-                ..default()
-            },
-            transform: Transform::from_rotation(Quat::from_rotation_x(
-                -std::f32::consts::FRAC_PI_2,
-            )),
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 30000.,
             ..default()
         },
-    );
+        transform: Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+        ..default()
+    });
 }
 
 #[derive(Component)]

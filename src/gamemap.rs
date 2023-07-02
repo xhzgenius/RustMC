@@ -17,11 +17,27 @@ fn zero_chunk() -> Array3<i32> {
     return Array3::zeros((CHUNK_SIZE, CHUNK_HEIGHT, CHUNK_SIZE));
 }
 
+/**
+ Returns a flat chunk (half grass, half air). 
+ */
+fn flat_chunk() -> Array3<i32> {
+    let mut chunk: Array3<i32> = Array3::zeros((CHUNK_SIZE, CHUNK_HEIGHT, CHUNK_SIZE));
+    chunk.fill(210);
+    for y in CHUNK_HEIGHT/2..CHUNK_HEIGHT {
+        for x in 0..CHUNK_SIZE {
+            for z in 0..CHUNK_SIZE {
+                *chunk.get_mut((x, y, z)).unwrap() = -1;
+            }
+        }
+    }
+    return chunk;
+}
+
 fn test_gamemap() -> GameMap {
     let mut new_map = HashMap::new();
     for x in -3..3 {
         for z in -3..3 {
-            new_map.insert((x, z), zero_chunk());
+            new_map.insert((x, z), flat_chunk());
         }
     }
     return GameMap {
