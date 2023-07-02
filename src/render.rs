@@ -1,6 +1,5 @@
 use crate::*;
 use bevy::ecs::system::EntityCommands;
-use bevy::gltf::Gltf;
 use bevy::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -16,27 +15,14 @@ impl Plugin for RenderPlugin {
 }
 
 /**
- The player's starting transform. Can be configured.
- TODO: Save the player's starting transform in the save.
-*/
-fn player_starting_transform() -> Transform {
-    let mut transform = Transform::from_xyz(0., gamemap::CHUNK_HEIGHT as f32 / 2. + 5., 0.);
-    transform.look_at(
-        Vec3::new(20., gamemap::CHUNK_HEIGHT as f32 / 2. - 5., 10.),
-        Vec3::new(0., 1., 0.),
-    );
-    return transform;
-}
-
-/**
  Initialize the whole scene in the game, in other words, load all blocks and entities.
 */
 fn init_blocks_and_entities(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut game_map: Res<gamemap::GameMap>,
+    materials: ResMut<Assets<StandardMaterial>>,
+    game_map: Res<gamemap::GameMap>,
 ) {
     // Prepare model for a block.
     let block_mesh = meshes.add(shape::Cube { size: 1.0 }.into());
@@ -77,7 +63,7 @@ fn init_blocks_and_entities(
     for &(chunks_x, chunks_z) in game_map.map.keys() {
         let chunk = &game_map.map[&(chunks_x, chunks_z)];
         for entity_status_locked in &chunk.entities {
-            let mut entity_status = entity_status_locked.lock().unwrap();
+            let entity_status = entity_status_locked.lock().unwrap();
             let mut entity_transform: Transform =
                 Transform::from_translation(entity_status.position)
                     .with_scale(entity_status.scaling);
@@ -93,7 +79,6 @@ fn init_blocks_and_entities(
                 ),
             };
             let mut entity_commands = commands.spawn((
-                entities::Entity,
                 entities::EntityStatusPointer {
                     pointer: Arc::clone(entity_status_locked),
                 },
@@ -107,7 +92,6 @@ fn init_blocks_and_entities(
                 },
             ));
             insert_entity_tags(&mut entity_commands, &entity_status.entity_type);
-
         }
     }
 
@@ -124,7 +108,7 @@ fn init_blocks_and_entities(
 }
 
 #[derive(Component)]
-struct GameCamera;
+pub struct GameCamera;
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn((GameCamera, Camera3dBundle::default()));
@@ -146,6 +130,7 @@ fn update_camera(
         .expect("Not exactly one main player!");
     // I think panic here is necessary, because this should never happen. --XHZ
     camera_transform.clone_from(player_transform); // Set the camera transform equal to the player transform
+    // println!("Transform of camera: {:?}",camera_transform)
 }
 
 /**
@@ -194,10 +179,12 @@ fn find_model_name_by_type(model_type: &str) -> Option<&str> {
 
 fn insert_entity_tags(entity_commands: &mut EntityCommands, entity_type: &str) {
     match entity_type {
-        "MainPlayer" => entity_commands.insert((entities::Entity, player::Player, player::MainPlayer)),
+        "MainPlayer" => {
+            entity_commands.insert((entities::Entity, player::Player, player::MainPlayer))
+        }
         "Player" => entity_commands.insert((entities::Entity, player::Player)),
-        "Creeper" => entity_commands.insert((entities::Entity, entities::Creeper)), 
-        "Torch" => entity_commands.insert((entities::Entity, entities::Torch)), 
-        _ => entity_commands
+        "Creeper" => entity_commands.insert((entities::Entity, entities::Creeper)),
+        "Torch" => entity_commands.insert((entities::Entity, entities::Torch)),
+        _ => entity_commands,
     };
 }

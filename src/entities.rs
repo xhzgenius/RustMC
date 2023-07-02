@@ -37,19 +37,21 @@ pub struct EntityStatus {
     pub velocity: Vec3,
 }
 
-// Why should it be static? I don't really know why, but it seems to be working.
 fn update_entity(
     mut query_entity_status: Query<(&EntityStatusPointer, &mut Transform), With<Entity>>,
 ) {
     for (status_ptr, mut transform) in query_entity_status.iter_mut() {
-        let status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
+        let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
         let local_y = transform.up().y;
         let movement = (transform.forward() * status.velocity.x
-            + transform.right() * status.velocity.z)
+            + transform.right() * status.velocity.z+ transform.up() * status.velocity.y)
             * TIME_STEP
-            * Vec3::new(1., 0., 1.)
+            // * Vec3::new(1., 0., 1.)
             / local_y;
         transform.translation += movement;
-        println!("{:?}", movement)
+        status.position = transform.translation;
+        // status.rotation = transform.rotation;
+        status.scaling = transform.scale;
+        // println!("Transform of {}: {:?}", status.entity_type, transform)
     }
 }

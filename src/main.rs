@@ -4,6 +4,7 @@ mod entities;
 pub mod gamemap;
 mod player;
 mod render;
+mod ui;
 
 use bevy::prelude::*;
 
@@ -14,6 +15,6 @@ fn main() {
     app.add_plugin(render::RenderPlugin);
     app.add_plugin(entities::EntityUpdatePlugin);
     app.add_plugin(control::ControlPlugin);
-    // app.insert_resource(gamemap::load_gamemap(""));
+    app.add_plugin(ui::UIPlugin);
     app.run();
 }
