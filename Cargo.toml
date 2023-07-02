@@ -1,8 +1,23 @@
 [package]
-name = "RustMC"
+name = "rust_mc"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# bevy = "0.10.1"
+bevy = { version = "0.10.1", features = ["dynamic_linking"] } 
+ndarray = "0.15.6"
+walkdir = "2.3.3"
+# NOTE: Remember to revert this before releasing your game! 
+# Otherwise you will need to include libbevy_dylib alongside your game if you want it to run. 
+# If you remove the "dynamic" feature, your game executable can run standalone.
+
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
