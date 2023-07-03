@@ -1,5 +1,6 @@
 use crate::*;
 use bevy::prelude::*;
+use std::f32::consts::PI;
 
 #[derive(Component)]
 struct UIText;
@@ -24,7 +25,7 @@ fn init_ui_text(mut commands: Commands, asset_server: Res<AssetServer>) {
                 color: Color::WHITE,
             },
         ) // Set the alignment of the Text
-        .with_text_alignment(TextAlignment::Center)
+        .with_text_alignment(TextAlignment::Left)
         // Set the style of the TextBundle itself.
         .with_style(Style {
             position_type: PositionType::Absolute,
@@ -55,7 +56,7 @@ fn update_ui_text(
         text.sections[0].value = format!(
             "Player position: {}\nPlayer rotation: {}\nPlayer velocity: {}\nCamera transform: {}",
             player_status.position,
-            player_status.rotation,
+            player_status.rotation / PI,
             player_status.velocity,
             camera_transform.translation()
         );

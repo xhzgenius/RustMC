@@ -1,6 +1,7 @@
 use crate::*;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::f32::consts::PI;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -56,15 +57,15 @@ pub fn new_gamemap() -> GameMap {
         for z in -3..3 {
             let mut chunk = flat_chunk();
             if x == 0 && z == 0 {
-                let proper_y: f32 = CHUNK_HEIGHT as f32 / 2. + 2.;
+                let proper_y: f32 = CHUNK_HEIGHT as f32 / 2. + 1.;
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "MainPlayer".to_string(),
                         health: 20,
                         position: Vec3::new(0., proper_y, 0.),
-                        rotation: 0.,
-                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        rotation: PI*0.,
+                        scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
                 chunk
@@ -72,9 +73,9 @@ pub fn new_gamemap() -> GameMap {
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new(5., proper_y, 10.),
-                        rotation: 0.,
-                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        position: Vec3::new(5., proper_y, -10.),
+                        rotation: PI*0.,
+                        scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
                 chunk
@@ -82,9 +83,9 @@ pub fn new_gamemap() -> GameMap {
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Player".to_string(),
                         health: 20,
-                        position: Vec3::new(10., proper_y, 10.),
-                        rotation: 0.,
-                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        position: Vec3::new(10., proper_y, -10.),
+                        rotation: PI*0.,
+                        scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
                 chunk
@@ -92,9 +93,9 @@ pub fn new_gamemap() -> GameMap {
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new(10., proper_y, 8.),
-                        rotation: 0.,
-                        scaling: Vec3::new(0.1, 0.1, 0.1),
+                        position: Vec3::new(10., proper_y, -8.),
+                        rotation: PI*0.,
+                        scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
             }
@@ -115,7 +116,7 @@ pub fn load_gamemap(filename: &str) -> GameMap {
             Ok(gamemap) => gamemap,
             Err(err) => panic!("Failed to deserialize map: {}", err),
         },
-        Err(err) => panic!("{}", err),
+        Err(err) => panic!("Falied to load map from file: {}", err),
     }
 }
 

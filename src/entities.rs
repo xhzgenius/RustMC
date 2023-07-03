@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
-const TIME_STEP: f32 = 1.0 / 60.0;
+const TIME_STEP: f32 = 1.0 / 10.0;
 
 pub struct EntityUpdatePlugin;
 
@@ -42,12 +42,7 @@ fn update_entity(
 ) {
     for (status_ptr, mut transform) in query_entity_status.iter_mut() {
         let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
-        let local_y = transform.up().y;
-        let movement = (transform.forward() * status.velocity.x
-            + transform.right() * status.velocity.z+ transform.up() * status.velocity.y)
-            * TIME_STEP
-            // * Vec3::new(1., 0., 1.)
-            / local_y;
+        let movement = status.velocity * TIME_STEP;
         transform.translation += movement;
         status.position = transform.translation;
         // status.rotation = transform.rotation;

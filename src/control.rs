@@ -25,17 +25,18 @@ fn control(
     status.velocity.x = 0.;
     status.velocity.y = 0.;
     status.velocity.z = 0.;
+    // x means right, z means back, y means top. 
     if keys.pressed(KeyCode::W) {
-        status.velocity.x = 1.0;
-    }
-    if keys.pressed(KeyCode::A) {
         status.velocity.z = -1.0;
     }
-    if keys.pressed(KeyCode::S) {
+    if keys.pressed(KeyCode::A) {
         status.velocity.x = -1.0;
     }
-    if keys.pressed(KeyCode::D) {
+    if keys.pressed(KeyCode::S) {
         status.velocity.z = 1.0;
+    }
+    if keys.pressed(KeyCode::D) {
+        status.velocity.x = 1.0;
     }
     if keys.pressed(KeyCode::Space) {
         status.velocity.y = 1.0;

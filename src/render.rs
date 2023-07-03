@@ -2,6 +2,7 @@ use crate::*;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use std::collections::HashMap;
+use std::f32::consts::PI;
 use std::sync::Arc;
 
 pub struct RenderPlugin;
@@ -9,8 +10,7 @@ pub struct RenderPlugin;
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(init_blocks_and_entities);
-        app.add_startup_system(setup_camera);
-        app.add_system(update_camera);
+        // app.add_system(update_camera);
     }
 }
 
@@ -68,30 +68,28 @@ fn init_blocks_and_entities(
                 Transform::from_translation(entity_status.position)
                     .with_scale(entity_status.scaling);
             entity_transform.rotate_y(entity_status.rotation);
-            let entity_model_name = match find_model_name_by_type(&entity_status.entity_type) {
-                Some(model_name) => model_name,
-                None => panic!(
-                    "{}",
-                    format!(
-                        "Model not found for entity type {}! ",
-                        entity_status.entity_type
-                    )
-                ),
-            };
+            let entity_model_name = find_model_name_by_type(&entity_status.entity_type);
+            // First spawn the entity's status pointer and bounding box.
             let mut entity_commands = commands.spawn((
-                entities::EntityStatusPointer {
-                    pointer: Arc::clone(entity_status_locked),
-                },
-                SceneBundle {
+                entities::EntityStatusPointer {pointer: Arc::clone(entity_status_locked),},
+                PbrBundle {
+                    transform: entity_transform, 
+                    ..default()
+                }
+            ));
+            // Then insert entity tags into the entity.
+            insert_entity_tags(&mut entity_commands, &entity_status.entity_type);
+            // Then spawn the entity's shown model.
+            entity_commands.with_children(|parent| {
+                parent.spawn((SceneBundle {
                     scene: entity_models
                         .get(entity_model_name)
                         .expect(&format!("Model not loaded: {}", entity_model_name))
                         .clone(),
-                    transform: entity_transform,
+                    transform: get_proper_model_transform_by_type(&entity_status.entity_type),
                     ..default()
-                },
-            ));
-            insert_entity_tags(&mut entity_commands, &entity_status.entity_type);
+                },));
+            });
         }
     }
 
@@ -102,7 +100,7 @@ fn init_blocks_and_entities(
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+        transform: Transform::from_rotation(Quat::from_rotation_x(-PI * 0.5)),
         ..default()
     });
 }
@@ -110,28 +108,25 @@ fn init_blocks_and_entities(
 #[derive(Component)]
 pub struct GameCamera;
 
-fn setup_camera(mut commands: Commands) {
-    commands.spawn((GameCamera, Camera3dBundle::default()));
-}
-
 /**
  Update the camera per frame, making it consistent with the player.
+ Useless now, because camera is now a child of the main player.
 */
-fn update_camera(
-    mut query_camera: Query<&mut GlobalTransform, With<GameCamera>>,
-    query_main_player: Query<&GlobalTransform, (With<player::MainPlayer>, Without<GameCamera>)>,
-) {
-    let mut camera_transform = query_camera
-        .get_single_mut()
-        .expect("Not exactly one camera!");
-    // TODO: use two cameras: 1st point of view and third person camera.
-    let player_transform = query_main_player
-        .get_single()
-        .expect("Not exactly one main player!");
-    // I think panic here is necessary, because this should never happen. --XHZ
-    camera_transform.clone_from(player_transform); // Set the camera transform equal to the player transform
-                                                   // println!("Transform of camera: {:?}",camera_transform)
-}
+// fn update_camera(
+//     mut query_camera: Query<&mut GlobalTransform, With<GameCamera>>,
+//     query_main_player: Query<&GlobalTransform, (With<player::MainPlayer>, Without<GameCamera>)>,
+// ) {
+//     let mut camera_transform = query_camera
+//         .get_single_mut()
+//         .expect("Not exactly one camera!");
+//     // TODO: use two cameras: 1st point of view and third person camera.
+//     let player_transform = query_main_player
+//         .get_single()
+//         .expect("Not exactly one main player!");
+//     // I think panic here is necessary, because this should never happen. --XHZ
+//     camera_transform.clone_from(player_transform); // Set the camera transform equal to the player transform
+//                                                    // println!("Transform of camera: {:?}",camera_transform)
+// }
 
 /**
  Load textures of every kind of blocks.
@@ -167,24 +162,48 @@ fn load_entity_models(asset_server: &Res<AssetServer>) -> HashMap<String, Handle
     return entity_models;
 }
 
-fn find_model_name_by_type(model_type: &str) -> Option<&str> {
-    match model_type {
-        "Creeper" => Some("minecraft_creeper.glb"),
-        "Player" => Some("minecraft_steve.glb"),
-        "MainPlayer" => Some("minecraft_steve.glb"),
-        "Torch" => Some("minecraft_torch.glb"),
-        _ => None,
+fn find_model_name_by_type(entity_type: &str) -> &str {
+    match entity_type {
+        "Creeper" => "minecraft_creeper.glb",
+        "Player" => "minecraft_steve.glb",
+        "MainPlayer" => "minecraft_steve.glb",
+        "Torch" => "minecraft_torch.glb",
+        _ => panic!("Unknown entity type: {}", entity_type),
+    }
+}
+
+fn get_proper_model_transform_by_type(entity_type: &str) -> Transform {
+    match entity_type {
+        "Creeper" => {
+            Transform::from_scale(Vec3::new(0.1, 0.1, 0.1)).with_rotation(Quat::from_rotation_y(PI))
+        }
+        "Player" => {
+            Transform::from_scale(Vec3::new(0.1, 0.1, 0.1)).with_rotation(Quat::from_rotation_y(PI))
+        }
+        "MainPlayer" => {
+            Transform::from_scale(Vec3::new(0.1, 0.1, 0.1)).with_rotation(Quat::from_rotation_y(PI))
+        }
+        "Torch" => Transform::from_scale(Vec3::new(0.5, 0.5, 0.5)),
+        _ => panic!("Unknown entity type: {}", entity_type),
     }
 }
 
 fn insert_entity_tags(entity_commands: &mut EntityCommands, entity_type: &str) {
     match entity_type {
-        "MainPlayer" => {
-            entity_commands.insert((entities::Entity, player::Player, player::MainPlayer))
-        }
+        "MainPlayer" => entity_commands
+            .insert((entities::Entity, player::Player, player::MainPlayer))
+            .with_children(|parent| {
+                parent.spawn((
+                    GameCamera,
+                    Camera3dBundle {
+                        transform: Transform::from_xyz(0., 2.7, 8.0),
+                        ..default()
+                    },
+                ));
+            }),
         "Player" => entity_commands.insert((entities::Entity, player::Player)),
         "Creeper" => entity_commands.insert((entities::Entity, entities::Creeper)),
         "Torch" => entity_commands.insert((entities::Entity, entities::Torch)),
-        _ => entity_commands,
+        _ => panic!("Unknown entity type: {}", entity_type),
     };
 }
