@@ -2,14 +2,15 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
-const TIME_STEP: f32 = 1.0 / 10.0;
+const TIME_STEP: f32 = 1.0 / 60.0;
 
 pub struct EntityUpdatePlugin;
 
 impl Plugin for EntityUpdatePlugin {
     fn build(&self, app: &mut App) {
+        // Update entities at fixed intervals. 
         app.insert_resource(FixedTime::new_from_secs(TIME_STEP));
-        app.add_system(update_entity);
+        app.add_system(update_entity.in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 
