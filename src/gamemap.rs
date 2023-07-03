@@ -1,6 +1,7 @@
 use crate::*;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::f32::consts::PI;
 use std::{
     collections::HashMap,
@@ -10,8 +11,10 @@ use std::{
 pub const CHUNK_SIZE: usize = 16;
 pub const CHUNK_HEIGHT: usize = 8;
 
+#[serde_as]
 #[derive(Resource, Serialize, Deserialize)]
 pub struct GameMap {
+    #[serde_as(as = "Vec<(_,_)>")]
     pub map: HashMap<(i32, i32), Chunk>,
 }
 
@@ -64,7 +67,7 @@ pub fn new_gamemap() -> GameMap {
                         entity_type: "MainPlayer".to_string(),
                         health: 20,
                         position: Vec3::new(0., proper_y, 0.),
-                        rotation: PI*0.,
+                        rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
@@ -74,7 +77,7 @@ pub fn new_gamemap() -> GameMap {
                         entity_type: "Creeper".to_string(),
                         health: 20,
                         position: Vec3::new(5., proper_y, -10.),
-                        rotation: PI*0.,
+                        rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
@@ -84,7 +87,7 @@ pub fn new_gamemap() -> GameMap {
                         entity_type: "Player".to_string(),
                         health: 20,
                         position: Vec3::new(10., proper_y, -10.),
-                        rotation: PI*0.,
+                        rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
@@ -94,7 +97,7 @@ pub fn new_gamemap() -> GameMap {
                         entity_type: "Creeper".to_string(),
                         health: 20,
                         position: Vec3::new(10., proper_y, -8.),
-                        rotation: PI*0.,
+                        rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                     })));
@@ -106,9 +109,9 @@ pub fn new_gamemap() -> GameMap {
 }
 
 /**
- Load a game map from a file.
- Returns GameMap if the file is successfully loaded. Otherwise panics.
- (The Bevy framework does not support returning a Result here.)
+Load a game map from a file.
+Returns GameMap if the file is successfully loaded. Otherwise panics.
+(The Bevy framework does not support returning a Result here.)
 */
 pub fn load_gamemap(filename: &str) -> GameMap {
     match std::fs::read_to_string(filename) {
@@ -121,8 +124,8 @@ pub fn load_gamemap(filename: &str) -> GameMap {
 }
 
 /**
- Save a game map to a file.
- Returns Ok(()) if the map is successfully saved. Otherwise returns the error.
+Save a game map to a file.
+Returns Ok(()) if the map is successfully saved. Otherwise returns the error.
 */
 pub fn save_gamemap(gamemap: &GameMap, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     match serde_json::to_string(&gamemap) {
@@ -132,4 +135,13 @@ pub fn save_gamemap(gamemap: &GameMap, filename: &str) -> Result<(), Box<dyn std
         },
         Err(err) => Err(Box::new(err)),
     }
+}
+
+#[test]
+fn test_save_gamemap() {
+    let gamemap = new_gamemap();
+    let result = save_gamemap(&gamemap, "./saves/test_gamemap.json");
+    println!("{:?}", result);
+    assert!(result.is_ok());
+    load_gamemap("./saves/test_gamemap.json");
 }
