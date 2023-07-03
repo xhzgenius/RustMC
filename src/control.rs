@@ -100,7 +100,7 @@ This system is used to control the vertical angle of the camera.
  */
 fn head_up(
     mut motion_evr: EventReader<MouseMotion>,
-    mut query_camera_transform: Query<&mut Transform, With<render::GameCamera>>,
+    mut query_camera_transform: Query<&mut Transform, With<init_game::GameCamera>>,
 ) {
     static HEAD_UP_ANGLE: Mutex<f32> = Mutex::new(0.);
     let mut transform = query_camera_transform

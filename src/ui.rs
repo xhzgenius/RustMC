@@ -8,8 +8,8 @@ struct UIText;
 
 /// Plugin responsible for in-game UI.
 /// Currently it only shows some debug information.
-pub struct GameUIPlugin;
-impl Plugin for GameUIPlugin {
+pub struct UIPlugin;
+impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(init_game_ui_text);
         app.add_system(update_game_ui_text);
@@ -55,7 +55,7 @@ fn update_game_ui_text(
         (&entities::EntityStatusPointer, &GlobalTransform),
         With<player::MainPlayer>,
     >,
-    query_camera: Query<(&Transform, &GlobalTransform), With<render::GameCamera>>,
+    query_camera: Query<(&Transform, &GlobalTransform), With<init_game::GameCamera>>,
 ) {
     let (status_pointer, global_transform) =
         &query_player.get_single().expect("Not exactly one player!");

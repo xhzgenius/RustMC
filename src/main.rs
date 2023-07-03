@@ -3,33 +3,42 @@ mod control;
 mod entities;
 mod gamemap;
 mod player;
-mod render;
+mod init_game;
 mod ui;
 
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 
 /**
-The plugin group that is used in game, 
-including render, control, collision, entity update,
-and in-game UI.
+The enum that represents the state of the game. This is a global resource.
  */
-struct GamePluginGroup;
-impl PluginGroup for GamePluginGroup {
+#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
+enum GameState {
+    #[default]
+    InGame,
+    MainMenu,
+}
+
+/**
+The plugin group that is used in game,
+including render, control, collision, and entity update. 
+ */
+struct InGamePluginGroup;
+impl PluginGroup for InGamePluginGroup {
     fn build(self) -> PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>()
-            .add(render::RenderPlugin)
-            .add(control::ControlPlugin)
-            .add(entities::EntityUpdatePlugin)
-            .add(ui::GameUIPlugin)
+        let builder = PluginGroupBuilder::start::<Self>();
+        let builder = builder.add(init_game::InitGamePlugin);
+        let builder = builder.add(control::ControlPlugin);
+        let builder = builder.add(entities::EntityUpdatePlugin);
+        return builder;
     }
 }
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .insert_resource(gamemap::load_gamemap("./saves/test_gamemap.json"))
-        .add_plugins(GamePluginGroup);
-
+    app.add_state::<GameState>();
+    app.add_plugins(DefaultPlugins);
+    app.add_plugins(InGamePluginGroup);
+    app.add_plugin(ui::UIPlugin);
     app.run();
 }

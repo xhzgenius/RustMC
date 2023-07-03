@@ -6,11 +6,11 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 
 /// Plugin resposible for initializing scene (and camera) for the game.
-pub struct RenderPlugin;
-impl Plugin for RenderPlugin {
+pub struct InitGamePlugin;
+impl Plugin for InitGamePlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(gamemap::load_gamemap("./saves/test_gamemap.json"));
         app.add_startup_system(init_blocks_and_entities);
-        // app.add_system(update_camera);
     }
 }
 
