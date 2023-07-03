@@ -10,7 +10,7 @@ impl Plugin for EntityUpdatePlugin {
     fn build(&self, app: &mut App) {
         // Update entities at fixed intervals.
         app.insert_resource(FixedTime::new_from_secs(TIME_STEP));
-        app.add_system(update_entity.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_system(entity_move.in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 
@@ -30,28 +30,28 @@ pub struct EntityStatusPointer {
 
 #[derive(Serialize, Deserialize, Debug)]
 /**
-This is the status for any entity. It is stored on heap, and shared by `Arc<Mutex<EntityStatus>>`. 
-
-Fields:
----
-- entity_type: The entity type (String), e.g. `"Creeper".to_string()`.
-- health: The health (i32). Current health limit for player is `20`.
-- position: The absolute position (Vec3). Synchronized with this entity's `Transform.translation`.
-- rotation: The absolute rotation in radians.
-    Synchronized with this entity's `Transform.rotation.to_euler(EulerRot::YZX).0`.
-- scaling: The scaling factor (Vec3). Synchronized with this entity's `Transform.scale`.
-- velocity: The absolute velocity (Vec3).
+This is the status for any entity. It is stored on heap, and shared by `Arc<Mutex<EntityStatus>>`.
 */
 pub struct EntityStatus {
+    /// The entity type, e.g. `"Creeper".to_string()`.
     pub entity_type: String,
+    /// The health (i32). Current health limit for player is `20`.
     pub health: i32,
+    /// The absolute position (Vec3). Synchronized with this entity's `Transform.translation`.
     pub position: Vec3,
+    /// The absolute rotation in radians.
+    /// Synchronized with this entity's `Transform.rotation.to_euler(EulerRot::YZX).0`.
     pub rotation: f32,
+    /// The scaling factor (Vec3). Synchronized with this entity's `Transform.scale`.
     pub scaling: Vec3,
+    /// The absolute velocity (Vec3).
     pub velocity: Vec3,
 }
 
-fn update_entity(
+/**
+Make the entity move according to its velocity, and write its new position, rotation and scaling into its `EntityStatus`.
+ */
+fn entity_move(
     mut query_entity_status: Query<(&EntityStatusPointer, &mut Transform), With<Entity>>,
 ) {
     for (status_ptr, mut transform) in query_entity_status.iter_mut() {

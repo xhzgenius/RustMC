@@ -14,6 +14,9 @@ impl Plugin for UIPlugin {
     }
 }
 
+/**
+Initialize the text in the bottom-left corner of the screen.
+ */
 fn init_ui_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         TextBundle::from_section(
@@ -40,6 +43,10 @@ fn init_ui_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
+/**
+Update the text in the bottom-left corner of the screen.
+Currently it contains some debug information.
+ */
 fn update_ui_text(
     mut query_uitext: Query<&mut Text, With<UIText>>,
     query_player: Query<

@@ -15,7 +15,7 @@ impl Plugin for RenderPlugin {
 }
 
 /**
- Initialize the whole scene in the game, in other words, load all blocks and entities.
+ Initialize the whole scene in the game, in other words, load all blocks and entities and the camera.
 */
 fn init_blocks_and_entities(
     mut commands: Commands,
@@ -71,11 +71,13 @@ fn init_blocks_and_entities(
             let entity_model_name = find_model_name_by_type(&entity_status.entity_type);
             // First spawn the entity's status pointer and bounding box.
             let mut entity_commands = commands.spawn((
-                entities::EntityStatusPointer {pointer: Arc::clone(entity_status_locked),},
+                entities::EntityStatusPointer {
+                    pointer: Arc::clone(entity_status_locked),
+                },
                 PbrBundle {
-                    transform: entity_transform, 
+                    transform: entity_transform,
                     ..default()
-                }
+                },
             ));
             // Then insert entity tags into the entity.
             insert_entity_tags(&mut entity_commands, &entity_status.entity_type);
@@ -88,8 +90,8 @@ fn init_blocks_and_entities(
                         .clone(),
                     transform: get_proper_model_transform_by_type(&entity_status.entity_type),
                     visibility: match &entity_status.entity_type as &str {
-                        "MainPlayer" => Visibility::Hidden, 
-                        _ => Visibility::Visible
+                        "MainPlayer" => Visibility::Hidden,
+                        _ => Visibility::Visible,
                     },
                     ..default()
                 },));
@@ -111,26 +113,6 @@ fn init_blocks_and_entities(
 
 #[derive(Component)]
 pub struct GameCamera;
-
-/**
- Update the camera per frame, making it consistent with the player.
- Useless now, because camera is now a child of the main player.
-*/
-// fn update_camera(
-//     mut query_camera: Query<&mut GlobalTransform, With<GameCamera>>,
-//     query_main_player: Query<&GlobalTransform, (With<player::MainPlayer>, Without<GameCamera>)>,
-// ) {
-//     let mut camera_transform = query_camera
-//         .get_single_mut()
-//         .expect("Not exactly one camera!");
-//     // TODO: use two cameras: 1st point of view and third person camera.
-//     let player_transform = query_main_player
-//         .get_single()
-//         .expect("Not exactly one main player!");
-//     // I think panic here is necessary, because this should never happen. --XHZ
-//     camera_transform.clone_from(player_transform); // Set the camera transform equal to the player transform
-//                                                    // println!("Transform of camera: {:?}",camera_transform)
-// }
 
 /**
  Load textures of every kind of blocks.

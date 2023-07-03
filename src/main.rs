@@ -1,7 +1,7 @@
 mod blocks;
 mod control;
 mod entities;
-pub mod gamemap;
+mod gamemap;
 mod player;
 mod render;
 mod ui;

@@ -1,10 +1,9 @@
 use std::f32::consts::PI;
 use std::sync::Mutex;
 
-use crate::{entities::EntityStatusPointer, *};
+use crate::*;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
-use bevy::window::CursorGrabMode;
 
 pub struct ControlPlugin;
 
@@ -18,6 +17,9 @@ impl Plugin for ControlPlugin {
 }
 
 const MAX_VELOCITY: f32 = 5.;
+/**
+This system is used to make the main player walk.
+ */
 fn walk(
     keys: Res<Input<KeyCode>>,
     mut query_main_player_status: Query<
@@ -61,6 +63,9 @@ fn walk(
     }
 }
 
+/**
+This system is used to lock mouse cursor position when mouse is in the window.
+ */
 fn lock_mouse_cursor(mut windows: Query<&mut Window>, key: Res<Input<KeyCode>>) {
     let mut window = windows.get_single_mut().unwrap();
 
@@ -74,6 +79,9 @@ fn lock_mouse_cursor(mut windows: Query<&mut Window>, key: Res<Input<KeyCode>>) 
 }
 
 const MOUSE_SENSITIVITY_HORIZONTAL: f32 = 0.2;
+/**
+This system is used to rotate main player horizontally (around Y-axis).
+*/
 fn rotate(
     mut motion_evr: EventReader<MouseMotion>,
     mut query_main_player_transform: Query<&mut Transform, With<player::MainPlayer>>,
@@ -87,11 +95,14 @@ fn rotate(
 }
 
 const MOUSE_SENSITIVITY_VERTICAL: f32 = 0.2;
-static HEAD_UP_ANGLE: Mutex<f32> = Mutex::new(0.);
+/**
+This system is used to control the vertical angle of the camera.
+ */
 fn head_up(
     mut motion_evr: EventReader<MouseMotion>,
     mut query_camera_transform: Query<&mut Transform, With<render::GameCamera>>,
 ) {
+    static HEAD_UP_ANGLE: Mutex<f32> = Mutex::new(0.);
     let mut transform = query_camera_transform
         .get_single_mut()
         .expect("Not exactly one camera!");
