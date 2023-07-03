@@ -2,22 +2,24 @@ use crate::*;
 use bevy::prelude::*;
 use std::f32::consts::PI;
 
+/// A "tag" component for a section of UI-text.
 #[derive(Component)]
 struct UIText;
 
-pub struct UIPlugin;
-
-impl Plugin for UIPlugin {
+/// Plugin responsible for in-game UI.
+/// Currently it only shows some debug information.
+pub struct GameUIPlugin;
+impl Plugin for GameUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(init_ui_text);
-        app.add_system(update_ui_text);
+        app.add_startup_system(init_game_ui_text);
+        app.add_system(update_game_ui_text);
     }
 }
 
 /**
 Initialize the text in the bottom-left corner of the screen.
  */
-fn init_ui_text(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn init_game_ui_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         TextBundle::from_section(
             // Accepts a `String` or any type that converts into a `String`, such as `&str`
@@ -47,7 +49,7 @@ fn init_ui_text(mut commands: Commands, asset_server: Res<AssetServer>) {
 Update the text in the bottom-left corner of the screen.
 Currently it contains some debug information.
  */
-fn update_ui_text(
+fn update_game_ui_text(
     mut query_uitext: Query<&mut Text, With<UIText>>,
     query_player: Query<
         (&entities::EntityStatusPointer, &GlobalTransform),

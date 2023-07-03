@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::sync::Arc;
 
+/// Plugin resposible for initializing scene (and camera) for the game.
 pub struct RenderPlugin;
-
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(init_blocks_and_entities);
@@ -110,7 +110,7 @@ fn init_blocks_and_entities(
         ..default()
     });
 }
-
+/// A "tag" component for the game camera.
 #[derive(Component)]
 pub struct GameCamera;
 
@@ -148,6 +148,7 @@ fn load_entity_models(asset_server: &Res<AssetServer>) -> HashMap<String, Handle
     return entity_models;
 }
 
+/// Util function.
 fn find_model_name_by_type(entity_type: &str) -> &str {
     match entity_type {
         "Creeper" => "minecraft_creeper.glb",
@@ -158,6 +159,7 @@ fn find_model_name_by_type(entity_type: &str) -> &str {
     }
 }
 
+/// Util function.
 fn get_proper_model_transform_by_type(entity_type: &str) -> Transform {
     match entity_type {
         "Creeper" => {
@@ -174,6 +176,7 @@ fn get_proper_model_transform_by_type(entity_type: &str) -> Transform {
     }
 }
 
+/// Util function.
 fn insert_entity_tags(entity_commands: &mut EntityCommands, entity_type: &str) {
     match entity_type {
         "MainPlayer" => entity_commands

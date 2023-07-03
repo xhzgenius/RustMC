@@ -4,8 +4,9 @@ use std::sync::{Arc, Mutex};
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
+/// Plugin responsible for the update of entities.
+/// Currently an entity only move itself duing update stage.
 pub struct EntityUpdatePlugin;
-
 impl Plugin for EntityUpdatePlugin {
     fn build(&self, app: &mut App) {
         // Update entities at fixed intervals.
@@ -14,15 +15,27 @@ impl Plugin for EntityUpdatePlugin {
     }
 }
 
+/// A "tag" component for all entities.
+/// Entities all have an `EntityStatusPointer` component.
 #[derive(Component)]
 pub struct Entity;
 
+/// A "tag" component for the entity type "Creeper".
 #[derive(Component)]
 pub struct Creeper;
 
+/// A "tag" component for the entity type "Torch".
 #[derive(Component)]
 pub struct Torch;
 
+/**
+A ref-counted pointer with lock, pointing to the entity's EntityStatus.
+Use this pointer like this:
+```
+let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
+status.health += 1;
+```
+ */
 #[derive(Component)]
 pub struct EntityStatusPointer {
     pub pointer: Arc<Mutex<EntityStatus>>,

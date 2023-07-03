@@ -11,6 +11,16 @@ use std::{
 pub const CHUNK_SIZE: usize = 16;
 pub const CHUNK_HEIGHT: usize = 8;
 
+/// The whole game map. Contains all blocks and entities.
+/// Can be serialized and stored into a file, and deserialized from a file.
+///
+/// Usage:
+/// ```
+/// let mut game_map: GameMap = new_gamemap();
+/// let chunks_x = 1;
+/// let chunks_z = 2;
+/// game_map.map.get((chunks_x, chunks_z)) // is a Chunk
+/// ```
 #[serde_as]
 #[derive(Resource, Serialize, Deserialize)]
 pub struct GameMap {
@@ -20,6 +30,8 @@ pub struct GameMap {
 
 type ChunkBlocks = [[[i32; CHUNK_SIZE]; CHUNK_HEIGHT]; CHUNK_SIZE];
 
+/// A Chunk is blocks within a 16*height*16 region, with all entities in this region.
+/// Both blocks and entities are stored as `Arc<Mutex<...>>`.
 #[derive(Serialize, Deserialize)]
 pub struct Chunk {
     pub blocks: Arc<Mutex<ChunkBlocks>>,

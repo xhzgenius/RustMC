@@ -5,8 +5,8 @@ use crate::*;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
+/// Plugin responsible for controlling the player.
 pub struct ControlPlugin;
-
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(walk);
