@@ -46,19 +46,25 @@ fn update_ui_text(
         (&entities::EntityStatusPointer, &GlobalTransform),
         With<player::MainPlayer>,
     >,
-    query_camera: Query<&GlobalTransform, With<render::GameCamera>>,
+    query_camera: Query<(&Transform, &GlobalTransform), With<render::GameCamera>>,
 ) {
     let (status_pointer, global_transform) =
         &query_player.get_single().expect("Not exactly one player!");
     let player_status = status_pointer.pointer.lock().unwrap();
-    let camera_transform = &query_camera.get_single().expect("Not exactly one camera!");
+    let (camera_transform, camera_global_transform) =
+        &query_camera.get_single().expect("Not exactly one camera!");
     for mut text in &mut query_uitext {
         text.sections[0].value = format!(
-            "Player position: {}\nPlayer rotation: {}\nPlayer velocity: {}\nCamera transform: {}",
+            "Player position: {}
+Player rotation (around Y-axis): {:.4} degrees
+Player velocity: {}
+Camera position: {}
+Camera rotation (vertical, around X-axis): {:.4} degrees",
             player_status.position,
-            player_status.rotation / PI,
+            player_status.rotation * 180. / PI,
             player_status.velocity,
-            camera_transform.translation()
+            camera_global_transform.translation(),
+            camera_transform.rotation.to_euler(EulerRot::XYZ).0 * 180. / PI
         );
     }
 }

@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use std::sync::Mutex;
 
 use crate::{entities::EntityStatusPointer, *};
 use bevy::input::mouse::MouseMotion;
@@ -11,11 +12,12 @@ impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(walk);
         app.add_system(rotate);
+        app.add_system(head_up);
         app.add_system(lock_mouse_cursor);
     }
 }
 
-const MAX_VELOCITY: f32 = 3.;
+const MAX_VELOCITY: f32 = 5.;
 fn walk(
     keys: Res<Input<KeyCode>>,
     mut query_main_player_status: Query<
@@ -67,7 +69,7 @@ fn lock_mouse_cursor(mut windows: Query<&mut Window>, key: Res<Input<KeyCode>>) 
     }
     // for a game that doesn't use the cursor (like a shooter):
     // use `Locked` mode to keep the cursor in one place
-    let lock_position = Vec2::new(window.width()/2., window.height()/2.);
+    let lock_position = Vec2::new(window.width() / 2., window.height() / 2.);
     window.set_cursor_position(Some(lock_position));
 }
 
@@ -81,5 +83,22 @@ fn rotate(
         .expect("Not exactly one main player!");
     for mouse_motion in motion_evr.iter() {
         transform.rotate_y(-mouse_motion.delta[0] * MOUSE_SENSITIVITY_HORIZONTAL * PI / 180.0);
+    }
+}
+
+const MOUSE_SENSITIVITY_VERTICAL: f32 = 0.2;
+static HEAD_UP_ANGLE: Mutex<f32> = Mutex::new(0.);
+fn head_up(
+    mut motion_evr: EventReader<MouseMotion>,
+    mut query_camera_transform: Query<&mut Transform, With<render::GameCamera>>,
+) {
+    let mut transform = query_camera_transform
+        .get_single_mut()
+        .expect("Not exactly one camera!");
+    for mouse_motion in motion_evr.iter() {
+        let delta_angle = -mouse_motion.delta[1] * MOUSE_SENSITIVITY_VERTICAL;
+        let new_angle = *HEAD_UP_ANGLE.lock().unwrap() + delta_angle;
+        *HEAD_UP_ANGLE.lock().unwrap() = f32::min(f32::max(new_angle, -90.), 90.);
+        transform.rotation = Quat::from_rotation_x(*HEAD_UP_ANGLE.lock().unwrap() * PI / 180.);
     }
 }

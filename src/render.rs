@@ -87,6 +87,10 @@ fn init_blocks_and_entities(
                         .expect(&format!("Model not loaded: {}", entity_model_name))
                         .clone(),
                     transform: get_proper_model_transform_by_type(&entity_status.entity_type),
+                    visibility: match &entity_status.entity_type as &str {
+                        "MainPlayer" => Visibility::Hidden, 
+                        _ => Visibility::Visible
+                    },
                     ..default()
                 },));
             });
@@ -196,7 +200,8 @@ fn insert_entity_tags(entity_commands: &mut EntityCommands, entity_type: &str) {
                 parent.spawn((
                     GameCamera,
                     Camera3dBundle {
-                        transform: Transform::from_xyz(0., 2.7, 8.0),
+                        // transform: Transform::from_xyz(0., 3.0, 8.0), // Third person camera
+                        transform: Transform::from_xyz(0., 1.7, -0.4), // First person camera
                         ..default()
                     },
                 ));
