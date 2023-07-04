@@ -11,7 +11,7 @@ impl Plugin for InitGamePlugin {
     fn build(&self, app: &mut App) {
         // app.insert_resource(gamemap::load_gamemap("./saves/test_gamemap.json"));
         app.insert_resource(gamemap::new_gamemap());
-        app.add_system(init_blocks_and_entities.in_schedule(OnEnter(GameState::InGame)));
+        app.add_system(init_blocks_and_entities.in_schedule(OnEnter(GameState::Loading)));
     }
 }
 

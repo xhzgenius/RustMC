@@ -18,6 +18,7 @@ enum GameState {
     InGame,
     MainMenu,
     Pause,
+    Loading,
 }
 
 /**
