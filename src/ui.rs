@@ -2,14 +2,14 @@
 //! ---
 //! The game itself has states: `MainMenu`, `InGame`, `Pause`, ...
 //!
-//! At MainMenu state, there is main menu UI.
+//! At `MainMenu` state, there is main menu UI.
 //! The main menu UI has states too: `Index`, `ChooseWorld`, `Settings`,
 //! and a `None` state representing that the game state is not at `MainMenu`.
 //!
-//! At InGame state, there is in-game UI.
+//! At `InGame` state, there is in-game UI.
 //! It does not have states. Instead, all components are controlled by its own bool value: show or not.
 //!
-//! At Pause state, there is pause UI.
+//! At `Pause` state, there is pause UI.
 //! It has states. To be determined...
 //! TODO: Implement the pause UI.
 
@@ -76,8 +76,8 @@ The enum that represents the state of the main menu UI. This is a global resourc
  */
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 enum MainMenuUIState {
-    None,
     #[default]
+    None,
     Index,
     Settings,
     ChooseWorld,
@@ -175,10 +175,10 @@ fn exit_main_menu(
     mut main_menu_state: ResMut<NextState<MainMenuUIState>>,
     query_camera: Query<Entity, With<UICamera>>,
 ) {
-    main_menu_state.set(MainMenuUIState::None);
     for camera in &query_camera {
         commands.entity(camera).despawn_recursive();
     }
+    main_menu_state.set(MainMenuUIState::None);
 }
 
 /**
