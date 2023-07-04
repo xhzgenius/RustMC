@@ -10,12 +10,13 @@ pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (walk, rotate, head_up, lock_mouse_cursor).in_set(OnUpdate(GameState::InGame)),
+            (walk, rotate, head_up, lock_mouse_cursor, close_on_esc)
+                .in_set(OnUpdate(GameState::InGame)),
         );
     }
 }
 
-const MAX_VELOCITY: f32 = 5.;
+const MAX_VELOCITY: f32 = 4.;
 /**
 This system is used to make the main player walk.
  */
@@ -33,7 +34,7 @@ fn walk(
     let mut status = status_pointer.pointer.lock().unwrap();
     // Operate the status.
     status.velocity.x = 0.;
-    status.velocity.y = 0.;
+    // status.velocity.y = 0.;
     status.velocity.z = 0.;
     // x means right, z means back, y means top.
     if keys.pressed(KeyCode::W) {
@@ -49,13 +50,14 @@ fn walk(
         status.velocity += transform.right();
     }
     if keys.pressed(KeyCode::Space) {
-        status.velocity += transform.up();
+        status.velocity.y = MAX_VELOCITY;
     }
     if keys.pressed(KeyCode::LShift) {
-        status.velocity += transform.down();
+        status.velocity.y = -MAX_VELOCITY;
     }
-    let abs_velocity = status.velocity.length();
-    status.velocity *= MAX_VELOCITY / f32::max(1., abs_velocity);
+    let abs_velocity: f32 = f32::sqrt(status.velocity.x*status.velocity.x + status.velocity.z*status.velocity.z);
+    status.velocity.x *= MAX_VELOCITY / f32::max(1., abs_velocity);
+    status.velocity.z *= MAX_VELOCITY / f32::max(1., abs_velocity);
     // we can check multiple at once with `.any_*`
     if keys.any_pressed([KeyCode::LShift, KeyCode::RShift]) {
         // Either the left or right shift are being held down
@@ -112,5 +114,28 @@ fn head_up(
         let new_angle = *HEAD_UP_ANGLE.lock().unwrap() + delta_angle;
         *HEAD_UP_ANGLE.lock().unwrap() = f32::min(f32::max(new_angle, -90.), 90.);
         transform.rotation = Quat::from_rotation_x(*HEAD_UP_ANGLE.lock().unwrap() * PI / 180.);
+    }
+}
+
+/// Close the focused window whenever the escape key (<kbd>Esc</kbd>) is pressed
+///
+/// This is useful for examples or prototyping.
+pub fn close_on_esc(
+    mut commands: Commands,
+    focused_windows: Query<(Entity, &Window)>,
+    input: Res<Input<KeyCode>>,
+    gamemap: Res<gamemap::GameMap>,
+) {
+    for (window, focus) in focused_windows.iter() {
+        if !focus.focused {
+            continue;
+        }
+
+        if input.just_pressed(KeyCode::Escape) {
+            match gamemap::save_gamemap(&gamemap, "./saves/test_gamemap.json") {
+                Ok(_) => commands.entity(window).despawn(),
+                e => panic!("Save gamemap failed: {:?}", e),
+            }
+        }
     }
 }

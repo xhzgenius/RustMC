@@ -1,8 +1,7 @@
-use bevy::{prelude::*, time::common_conditions::on_fixed_timer};
+use crate::*;
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
-
-use crate::GameState;
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
@@ -12,12 +11,14 @@ pub struct EntityUpdatePlugin;
 impl Plugin for EntityUpdatePlugin {
     fn build(&self, app: &mut App) {
         // Update entities at fixed intervals.
-        app.add_system(
-            entity_move
+        app.insert_resource(FixedTime::new_from_secs(TIME_STEP));
+        app.add_systems(
+            (entity_move, gravity)
                 .in_set(OnUpdate(GameState::InGame))
-                .run_if(on_fixed_timer(std::time::Duration::from_secs_f32(
-                    TIME_STEP,
-                ))),
+                .in_schedule(CoreSchedule::FixedUpdate)
+                // .distributive_run_if(on_fixed_timer(std::time::Duration::from_secs_f32(
+                //     TIME_STEP,
+                // ))),
         );
     }
 }
@@ -81,6 +82,21 @@ fn entity_move(
         status.position = transform.translation;
         status.rotation = transform.rotation.to_euler(EulerRot::YZX).0;
         status.scaling = transform.scale;
-        // println!("Transform of {}: {:?}", status.entity_type, transform)
+    }
+}
+
+fn gravity(
+    mut query_entity_status: Query<&EntityStatusPointer, With<Entity>>,
+    gamemap: Res<gamemap::GameMap>,
+) {
+    for status_ptr in query_entity_status.iter_mut() {
+        let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
+        let block_id = gamemap
+            .query_block_by_xyz(status.position);
+        if block_id.unwrap_or(-1)<0 {
+            status.velocity += Vec3::new(0., -9.8 * TIME_STEP, 0.);
+        } else {
+            status.velocity[1] = f32::max(status.velocity[1], 0.);
+        }
     }
 }

@@ -14,8 +14,8 @@ The enum that represents the state of the game. This is a global resource.
  */
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 enum GameState {
-    InGame,
     #[default]
+    InGame,
     MainMenu,
     Pause,
 }

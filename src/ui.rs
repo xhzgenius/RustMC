@@ -55,8 +55,8 @@ The enum that represents the state of the main menu UI. This is a global resourc
  */
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 enum MainMenuUIState {
-    None,
     #[default]
+    None,
     Index,
     Settings,
     ChooseWorld,
@@ -113,10 +113,10 @@ fn exit_main_menu(
     mut main_menu_state: ResMut<NextState<MainMenuUIState>>,
     query_camera: Query<Entity, With<UICamera>>,
 ) {
-    main_menu_state.set(MainMenuUIState::None);
     for camera in &query_camera {
         commands.entity(camera).despawn_recursive();
     }
+    main_menu_state.set(MainMenuUIState::None);
 }
 
 /**

@@ -28,6 +28,26 @@ pub struct GameMap {
     pub map: HashMap<(i32, i32), Chunk>,
 }
 
+impl GameMap {
+    /// Query a block according to the coordinates.
+    pub fn query_block_by_xyz(&self, xyz: Vec3) -> Option<i32> {
+        let x = xyz[0] as i32;
+        let y = xyz[1] as usize;
+        let z = xyz[2] as i32;
+        let chunk_x = x / 16;
+        let chunk_z = z / 16;
+        let newx: usize = ((x % 16 + 16) % 16).try_into().unwrap();
+        let newz: usize = ((z % 16 + 16) % 16).try_into().unwrap();
+        if y >= CHUNK_HEIGHT {
+            return None;
+        }
+        return match self.map.get(&(chunk_x, chunk_z)) {
+            Some(chunk) => Some(chunk.blocks.lock().unwrap()[newx][y][newz]),
+            None => None,
+        };
+    }
+}
+
 type ChunkBlocks = [[[i32; CHUNK_SIZE]; CHUNK_HEIGHT]; CHUNK_SIZE];
 
 /// A Chunk is blocks within a 16*height*16 region, with all entities in this region.
@@ -72,7 +92,7 @@ pub fn new_gamemap() -> GameMap {
         for z in -3..3 {
             let mut chunk = flat_chunk();
             if x == 0 && z == 0 {
-                let proper_y: f32 = CHUNK_HEIGHT as f32 / 2. + 1.;
+                let proper_y: f32 = CHUNK_HEIGHT as f32 / 2.;
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {

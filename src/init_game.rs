@@ -3,13 +3,14 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use std::collections::HashMap;
 use std::f32::consts::PI;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// Plugin resposible for initializing scene (and camera) for the game.
 pub struct InitGamePlugin;
 impl Plugin for InitGamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(gamemap::load_gamemap("./saves/test_gamemap.json"));
+        // app.insert_resource(gamemap::load_gamemap("./saves/test_gamemap.json"));
+        app.insert_resource(gamemap::new_gamemap());
         app.add_system(init_blocks_and_entities.in_schedule(OnEnter(GameState::InGame)));
     }
 }
@@ -25,7 +26,17 @@ fn init_blocks_and_entities(
     game_map: Res<gamemap::GameMap>,
 ) {
     // Prepare model for a block.
-    let block_mesh = meshes.add(shape::Cube { size: 1.0 }.into());
+    let block_mesh = meshes.add(
+        shape::Box {
+            min_x: 0.,
+            max_x: 1.,
+            min_y: 0.,
+            max_y: 1.,
+            min_z: 0.,
+            max_z: 1.,
+        }
+        .into(),
+    );
     // Prepare material for every kind of blocks.
     let block_materials: Vec<Handle<StandardMaterial>> =
         load_block_textures(&asset_server, materials);
@@ -75,7 +86,9 @@ fn init_blocks_and_entities(
                     pointer: Arc::clone(entity_status_locked),
                 },
                 PbrBundle {
+                    mesh: get_collision_box_by_type(&entity_status.entity_type, &mut meshes),
                     transform: entity_transform,
+                    visibility: Visibility::Hidden,
                     ..default()
                 },
             ));
@@ -148,6 +161,53 @@ fn load_entity_models(asset_server: &Res<AssetServer>) -> HashMap<String, Handle
     return entity_models;
 }
 
+/// Get collision box of a kind of entities.
+fn get_collision_box_by_type(entity_type: &str, meshes: &mut ResMut<Assets<Mesh>>) -> Handle<Mesh> {
+    static COLLISION_BOXES: Mutex<Option<HashMap<&str, Handle<Mesh>>>> = Mutex::new(None);
+    // If the hashmap is uninitialized, initialize it.
+    if COLLISION_BOXES.lock().unwrap().is_none() {
+        let mut collision_boxes_initialized: HashMap<&str, Handle<Mesh>> = HashMap::new();
+        // Add collision boxes of each kind of entity.
+        collision_boxes_initialized.insert(
+            "Creeper",
+            meshes.add(
+                shape::Box::from_corners(Vec3::new(-0.3, 0., -0.3), Vec3::new(0.3, 1.8, 0.3))
+                    .into(),
+            ),
+        );
+        collision_boxes_initialized.insert(
+            "MainPlayer",
+            meshes.add(
+                shape::Box::from_corners(Vec3::new(-0.3, 0., -0.3), Vec3::new(0.3, 1.8, 0.3))
+                    .into(),
+            ),
+        );
+        collision_boxes_initialized.insert(
+            "Player",
+            meshes.add(
+                shape::Box::from_corners(Vec3::new(-0.3, 0., -0.3), Vec3::new(0.3, 1.8, 0.3))
+                    .into(),
+            ),
+        );
+        collision_boxes_initialized.insert(
+            "Torch",
+            meshes.add(
+                shape::Box::from_corners(Vec3::new(-0.1, 0., -0.1), Vec3::new(0.1, 0.7, 0.1))
+                    .into(),
+            ),
+        );
+        *COLLISION_BOXES.lock().unwrap() = Some(collision_boxes_initialized);
+    }
+    return COLLISION_BOXES
+        .lock()
+        .unwrap()
+        .clone()
+        .unwrap()
+        .get(entity_type)
+        .expect(&format!("Unknown entity type: {}", entity_type))
+        .clone();
+}
+
 /// Util function.
 fn find_model_name_by_type(entity_type: &str) -> &str {
     match entity_type {
@@ -162,15 +222,15 @@ fn find_model_name_by_type(entity_type: &str) -> &str {
 /// Util function.
 fn get_proper_model_transform_by_type(entity_type: &str) -> Transform {
     match entity_type {
-        "Creeper" => {
-            Transform::from_scale(Vec3::new(0.1, 0.1, 0.1)).with_rotation(Quat::from_rotation_y(PI))
-        }
-        "Player" => {
-            Transform::from_scale(Vec3::new(0.1, 0.1, 0.1)).with_rotation(Quat::from_rotation_y(PI))
-        }
-        "MainPlayer" => {
-            Transform::from_scale(Vec3::new(0.1, 0.1, 0.1)).with_rotation(Quat::from_rotation_y(PI))
-        }
+        "Creeper" => Transform::from_scale(Vec3::new(0.07, 0.07, 0.07))
+            .with_translation(Vec3::new(0., 0.85, 0.))
+            .with_rotation(Quat::from_rotation_y(PI)),
+        "Player" => Transform::from_scale(Vec3::new(0.065, 0.065, 0.065))
+            .with_translation(Vec3::new(0., 0.9, 0.))
+            .with_rotation(Quat::from_rotation_y(PI)),
+        "MainPlayer" => Transform::from_scale(Vec3::new(0.065, 0.065, 0.065))
+            .with_translation(Vec3::new(0., 0.9, 0.))
+            .with_rotation(Quat::from_rotation_y(PI)),
         "Torch" => Transform::from_scale(Vec3::new(0.5, 0.5, 0.5)),
         _ => panic!("Unknown entity type: {}", entity_type),
     }
