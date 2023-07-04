@@ -9,9 +9,8 @@ use std::sync::{Arc, Mutex};
 pub struct InitGamePlugin;
 impl Plugin for InitGamePlugin {
     fn build(&self, app: &mut App) {
-        // app.insert_resource(gamemap::load_gamemap("./saves/test_gamemap.json"));
-        app.insert_resource(gamemap::new_gamemap());
-        app.add_system(init_blocks_and_entities.in_schedule(OnEnter(GameState::Loading)));
+        app.add_system(init_blocks_and_entities.in_schedule(OnExit(GameState::MainMenu)));
+        app.add_system(loading_process.in_set(OnUpdate(GameState::Loading)));
     }
 }
 
@@ -23,8 +22,16 @@ fn init_blocks_and_entities(
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
-    game_map: Res<gamemap::GameMap>,
+    mut game_map: ResMut<gamemap::GameMap>,
+    world_name: Res<gamemap::WorldName>,
+    mut game_state: ResMut<NextState<GameState>>,
+    query_camera: Query<Entity, With<ui::UICamera>>,
 ) {
+    // Load game map or create a new game map.
+    *game_map = match &world_name.name {
+        Some(name) => gamemap::load_gamemap(&name),
+        None => gamemap::new_gamemap(),
+    };
     // Prepare model for a block.
     let block_mesh = meshes.add(
         shape::Box {
@@ -122,7 +129,20 @@ fn init_blocks_and_entities(
         transform: Transform::from_rotation(Quat::from_rotation_x(-PI * 0.5)),
         ..default()
     });
+
+    // std::thread::sleep(std::time::Duration::from_secs_f32(2.0));
 }
+
+/// The loading process does nothing.
+/// It waits until all entities are spawn, and set game state to InGame.
+fn loading_process(mut game_state: ResMut<NextState<GameState>>) {
+    // Do nothing.
+    // Change game state from Loading to InGame.
+    println!("Loading...");
+    // std::thread::sleep(std::time::Duration::from_secs_f32(0.5));
+    game_state.set(GameState::InGame);
+}
+
 /// A "tag" component for the game camera.
 #[derive(Component)]
 pub struct GameCamera;

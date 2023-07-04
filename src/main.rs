@@ -14,8 +14,8 @@ The enum that represents the state of the game. This is a global resource.
  */
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 enum GameState {
-    #[default]
     InGame,
+    #[default]
     MainMenu,
     Pause,
     Loading,
@@ -39,6 +39,8 @@ impl PluginGroup for InGamePluginGroup {
 fn main() {
     let mut app = App::new();
     app.add_state::<GameState>();
+    app.init_resource::<gamemap::GameMap>();
+    app.init_resource::<gamemap::WorldName>();
     app.add_plugins(DefaultPlugins);
     app.add_plugins(InGamePluginGroup);
     app.add_plugin(ui::UIPlugin);

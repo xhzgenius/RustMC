@@ -15,7 +15,10 @@
 
 use crate::{*, init_game::GameCamera};
 use bevy::prelude::*;
-use std::f32::consts::PI;
+use std::{
+    f32::consts::PI,
+    sync::{Arc, Mutex},
+};
 
 /// Plugin responsible for in-game UI.
 /// Currently it only shows some debug information.
@@ -77,8 +80,8 @@ The enum that represents the state of the main menu UI. This is a global resourc
  */
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 enum MainMenuUIState {
-    #[default]
     None,
+    #[default]
     Index,
     Settings,
     ChooseWorld,
@@ -107,11 +110,7 @@ enum PauseUIState {
 // Below are the group identifiers of the buttons, texts, etc.
 /// A "tag" component for the UI camera.
 #[derive(Component)]
-struct UICamera;
-
-#[derive(Component)]
-struct UICamera1;
-
+pub struct UICamera;
 /// A "tag" component for a section of main menu UI on index page.
 #[derive(Component)]
 struct MainMenuIndexUI;
@@ -193,10 +192,11 @@ fn exit_main_menu(
     mut main_menu_state: ResMut<NextState<MainMenuUIState>>,
     query_camera: Query<Entity, With<UICamera>>,
 ) {
+    main_menu_state.set(MainMenuUIState::None);
+    // clear main menu camrea.
     for camera in &query_camera {
         commands.entity(camera).despawn_recursive();
     }
-    main_menu_state.set(MainMenuUIState::None);
 }
 
 /**
@@ -368,7 +368,7 @@ fn main_menu_index_start_button_reaction(
     for interaction in &mut interaction_query {
         match *interaction {
             Interaction::Clicked => {
-                game_state.set(GameState::InGame);
+                game_state.set(GameState::Loading);
             }
             _ => {}
         }
