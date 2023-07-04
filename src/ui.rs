@@ -13,7 +13,7 @@
 //! It has states. To be determined...
 //! TODO: Implement the pause UI.
 
-use crate::*;
+use crate::{*, init_game::GameCamera};
 use bevy::prelude::*;
 use std::{
     f32::consts::PI,
@@ -50,6 +50,28 @@ impl Plugin for UIPlugin {
         app.add_state::<InGameUIState>();
         app.add_system(init_in_game_ui_text.in_schedule(OnEnter(GameState::InGame)));
         app.add_system(update_in_game_ui_text.in_set(OnUpdate(GameState::InGame)));
+
+        // React to esc in Game state.
+        app.add_system(in_game_pause_reaction.in_set(OnUpdate(GameState::InGame)));
+
+        // Pause UI
+        // Enter the Pause State.
+        app.add_state::<PauseUIState>();
+        app.add_systems((
+            enter_pause.in_schedule(OnEnter(GameState::Pause)),
+            exit_pause.in_schedule(OnExit(GameState::Pause)),
+        ));
+
+        // Show or clear UI of each state of Pause State.
+        app.add_system(init_pause_index.in_schedule(OnEnter(PauseUIState::Pause)));
+        app.add_system(clear_pause_index.in_schedule(OnExit(PauseUIState::Pause)));
+
+        // React to clicks in Pause state.
+        app.add_systems((
+            pause_index_return_button_reaction.in_set(OnUpdate(PauseUIState::Pause)),
+            pause_index_main_menu_button_reaction.in_set(OnUpdate(PauseUIState::Pause)),
+            //pause_index_exit_button_reaction.in_set(OnUpdate(PauseUIState::Pause)),
+        ));
     }
 }
 
@@ -75,6 +97,16 @@ enum InGameUIState {
     Pause,
 }
 
+/**
+The enum that represents the state of the pause UI. This is a global resource.
+ */
+#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
+enum PauseUIState {
+    #[default]
+    None,
+    Pause,
+}
+
 // Below are the group identifiers of the buttons, texts, etc.
 /// A "tag" component for the UI camera.
 #[derive(Component)]
@@ -89,13 +121,53 @@ struct MainMenuSettingsUI;
 #[derive(Component)]
 struct MainMenuChooseWorldUI;
 
+/// A "tag" component for a section of main menu UI on exit page.
+#[derive(Component)]
+struct MainMenuExitUI;
+
+/// A "tag" component for a section of pause UI on index page.
+#[derive(Component)]
+struct PauseIndexUI;
+// /// A "tag" component for a section of pause UI on return game page.
+// #[derive(Component)]
+// struct PauseReturnGameUI;
+
+// /// A "tag" component for a section of pause UI on return memu page.
+// #[derive(Component)]
+// struct PauseReturnMenuUI;
+
+// /// A "tag" component for a section of pause UI on exit page.
+// #[derive(Component)]
+// struct PauseExitUI;
+
 // Below are the names of individual buttons, texts, etc.
 /// A "name" for the start button on the main menu index.
 #[derive(Component)]
 struct MainMenuIndexUIStartButton;
+
+/// A "name" for the start button on the main menu index.
+#[derive(Component)]
+struct MainMenuIndexUIChooseWorldButton;
+
+/// A "name" for the exit button on the main menu index.
+#[derive(Component)]
+struct MainMenuIndexUIExitButton;
+
 /// A "name" for the bottom-left text area in-game UI.
 #[derive(Component)]
 struct InGameUIBottomLeftText;
+
+/// A "name" for the return game button on the pause index.
+#[derive(Component)]
+struct PauseIndexUIReturnButton;
+
+/// A "name" for the main menu button on the pause index.
+#[derive(Component)]
+struct PauseIndexUIMainmenuButton;
+
+/// A "name" for the exit button on the pause index.
+#[derive(Component)]
+struct PauseIndexUIExitButton;
 
 // Below are the behaviors when state changes.
 /**
@@ -104,8 +176,12 @@ Initialize the UI camera for main menu, and set the UI state to Index.
 fn enter_main_menu(
     mut commands: Commands,
     mut main_menu_state: ResMut<NextState<MainMenuUIState>>,
+    mut query_camera: Query<Entity, With<GameCamera>>,
 ) {
     main_menu_state.set(MainMenuUIState::Index);
+    for camera in &query_camera {
+        commands.entity(camera).despawn_recursive();
+    }
     commands.spawn((UICamera, Camera2dBundle { ..default() }));
 }
 /**
@@ -174,6 +250,62 @@ fn init_main_menu_index(mut commands: Commands, asset_server: Res<AssetServer>) 
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 "Start!",
+                TextStyle {
+                    font: asset_server.load("fonts/指尖隶书体.ttf"),
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                },
+            ));
+        });
+    commands
+        .spawn((
+            MainMenuIndexUI,
+            MainMenuIndexUIChooseWorldButton,
+            ButtonBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Percent(20.),
+                        right: Val::Percent(50.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::BLACK),
+                ..default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                "Choose World",
+                TextStyle {
+                    font: asset_server.load("fonts/指尖隶书体.ttf"),
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                },
+            ));
+        });
+    commands
+        .spawn((
+            MainMenuIndexUI,
+            MainMenuIndexUIExitButton,
+            ButtonBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Percent(10.),
+                        right: Val::Percent(50.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::BLACK),
+                ..default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                "Exit",
                 TextStyle {
                     font: asset_server.load("fonts/指尖隶书体.ttf"),
                     font_size: 50.0,
@@ -303,4 +435,200 @@ Camera rotation (vertical, around X-axis): {:.4} degrees",
             camera_transform.rotation.to_euler(EulerRot::XYZ).0 * 180. / PI
         );
     }
+}
+
+/// From in_game state to pause state
+fn in_game_pause_reaction(
+    key: Res<Input<KeyCode>>, 
+    mut game_state: ResMut<NextState<GameState>>
+) {
+    if key.pressed(KeyCode::Escape) {
+        game_state.set(GameState::Pause);
+    }
+}
+
+/**
+    Initialize the UI camera for pause state
+*/
+fn enter_pause(
+    mut commands: Commands, 
+    mut pause_state: ResMut<NextState<PauseUIState>>
+) {
+    pause_state.set(PauseUIState::Pause);
+    //commands.spawn((UICamera1, Camera2dBundle { ..default() }));
+}
+
+/**
+   Clears the UI camera for pause state, and set the UI state to None.
+*/
+fn exit_pause(
+    mut commands: Commands,
+    mut pause_state: ResMut<NextState<PauseUIState>>,
+    query_camera: Query<Entity, With<GameCamera>>,
+) {
+    pause_state.set(PauseUIState::None);
+}
+
+/**
+Initialize the pause UI on index page.
+ */
+fn init_pause_index(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // Initialize the text.
+    commands.spawn((
+        PauseIndexUI,
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "Pause",
+            TextStyle {
+                font: asset_server.load("fonts/指尖隶书体.ttf"),
+                font_size: 200.0,
+                color: Color::WHITE,
+            },
+        ) // Set the alignment of the Text
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                left: Val::Percent(30.),
+                top: Val::Percent(30.),
+                ..default()
+            },
+            size: Size::new(Val::Percent(40.), Val::Percent(20.)),
+            ..default()
+        }),
+    ));
+    // Initialize the buttons with children texts.
+    commands
+        .spawn((
+            PauseIndexUI,
+            PauseIndexUIReturnButton,
+            ButtonBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Percent(30.),
+                        right: Val::Percent(50.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::BLACK),
+                ..default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                "Return",
+                TextStyle {
+                    font: asset_server.load("fonts/指尖隶书体.ttf"),
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                },
+            ));
+        });
+    commands
+        .spawn((
+            PauseIndexUI,
+            PauseIndexUIMainmenuButton,
+            ButtonBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Percent(20.),
+                        right: Val::Percent(50.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::BLACK),
+                ..default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                " Menu ",
+                TextStyle {
+                    font: asset_server.load("fonts/指尖隶书体.ttf"),
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                },
+            ));
+        });
+    commands
+        .spawn((
+            PauseIndexUI,
+            PauseIndexUIExitButton,
+            ButtonBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Percent(10.),
+                        right: Val::Percent(50.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::BLACK),
+                ..default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                " Exit ",
+                TextStyle {
+                    font: asset_server.load("fonts/指尖隶书体.ttf"),
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                },
+            ));
+        });
+}
+
+/**
+Clears the pause index page UI.
+ */
+fn clear_pause_index(mut commands: Commands, query_ui: Query<Entity, With<PauseIndexUI>>) {
+    for ui in &query_ui {
+        commands.entity(ui).despawn_recursive();
+    }
+}
+
+/// Pause state mouse response.
+/**
+   Return button.
+*/
+fn pause_index_return_button_reaction(
+    mut interaction_query: Query<&Interaction, With<PauseIndexUIReturnButton>>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    for interaction in &mut interaction_query {
+        match *interaction {
+            Interaction::Clicked => {
+                game_state.set(GameState::InGame);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn pause_index_main_menu_button_reaction(
+    mut interaction_query: Query<&Interaction, With<PauseIndexUIMainmenuButton>>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+
+    for interaction in &mut interaction_query {
+        match *interaction {
+            Interaction::Clicked => {
+                game_state.set(GameState::MainMenu);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn pause_index_exit_button_reaction(
+    mut interaction_query: Query<&Interaction, With<PauseIndexUIExitButton>>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
 }

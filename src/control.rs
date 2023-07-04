@@ -72,7 +72,7 @@ fn lock_mouse_cursor(mut windows: Query<&mut Window>, key: Res<Input<KeyCode>>) 
         .get_single_mut()
         .expect("There is not exactly one window. ");
 
-    if key.pressed(KeyCode::Escape) {
+    if key.pressed(KeyCode::Tab) {
         return;
     }
     // for a game that doesn't use the cursor (like a shooter):
