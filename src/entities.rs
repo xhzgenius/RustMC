@@ -62,9 +62,9 @@ pub struct EntityStatus {
     pub velocity: Vec3,
 }
 
-fn check_whether_in_game(game_state: ResMut<NextState<GameState>>) -> bool {
+fn check_whether_in_game(game_state: Res<State<GameState>>) -> bool {
     println!("{:?}", game_state);
-    return game_state.0.unwrap_or(GameState::Pause) == GameState::InGame;
+    return game_state.0 == GameState::InGame;
 }
 
 /**
@@ -72,7 +72,7 @@ Make the entity move according to its velocity, and write its new position, rota
  */
 fn entity_move(
     mut query_entity_status: Query<(&EntityStatusPointer, &mut Transform), With<Entity>>,
-    game_state: ResMut<NextState<GameState>>,
+    game_state: Res<State<GameState>>,
 ) {
     if check_whether_in_game(game_state) == false {
         return;
@@ -90,7 +90,7 @@ fn entity_move(
 fn gravity(
     mut query_entity_status: Query<&EntityStatusPointer, With<Entity>>,
     gamemap: Res<gamemap::GameMap>,
-    game_state: ResMut<NextState<GameState>>,
+    game_state: Res<State<GameState>>,
 ) {
     if check_whether_in_game(game_state) == false {
         return;
