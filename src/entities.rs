@@ -12,11 +12,7 @@ impl Plugin for EntityUpdatePlugin {
     fn build(&self, app: &mut App) {
         // Update entities at fixed intervals.
         app.insert_resource(FixedTime::new_from_secs(TIME_STEP));
-        app.add_systems(
-            (entity_move, gravity)
-                .in_set(OnUpdate(GameState::InGame))
-                .in_schedule(CoreSchedule::FixedUpdate)
-        );
+        app.add_systems((entity_move, gravity).in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 
@@ -66,12 +62,21 @@ pub struct EntityStatus {
     pub velocity: Vec3,
 }
 
+fn check_whether_in_game(game_state: ResMut<NextState<GameState>>) -> bool {
+    println!("{:?}", game_state);
+    return game_state.0.unwrap_or(GameState::Pause) == GameState::InGame;
+}
+
 /**
 Make the entity move according to its velocity, and write its new position, rotation and scaling into its `EntityStatus`.
  */
 fn entity_move(
     mut query_entity_status: Query<(&EntityStatusPointer, &mut Transform), With<Entity>>,
+    game_state: ResMut<NextState<GameState>>,
 ) {
+    if check_whether_in_game(game_state) == false {
+        return;
+    }
     for (status_ptr, mut transform) in query_entity_status.iter_mut() {
         let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
         let movement = status.velocity * TIME_STEP;
@@ -85,12 +90,15 @@ fn entity_move(
 fn gravity(
     mut query_entity_status: Query<&EntityStatusPointer, With<Entity>>,
     gamemap: Res<gamemap::GameMap>,
+    game_state: ResMut<NextState<GameState>>,
 ) {
+    if check_whether_in_game(game_state) == false {
+        return;
+    }
     for status_ptr in query_entity_status.iter_mut() {
         let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
-        let block_id = gamemap
-            .query_block_by_xyz(status.position);
-        if block_id.unwrap_or(-1)<0 {
+        let block_id = gamemap.query_block_by_xyz(status.position);
+        if block_id.unwrap_or(-1) < 0 {
             status.velocity += Vec3::new(0., -9.8 * TIME_STEP, 0.);
         } else {
             status.velocity[1] = f32::max(status.velocity[1], 0.);

@@ -10,7 +10,7 @@ pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (walk, rotate, head_up, lock_mouse_cursor, close_on_esc)
+            (walk, rotate, head_up, lock_mouse_cursor)
                 .in_set(OnUpdate(GameState::InGame)),
         );
     }
