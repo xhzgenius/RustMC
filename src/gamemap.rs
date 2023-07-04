@@ -8,6 +8,14 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+/// The static variable representing the world's name.
+/// At the start of the main menu, it is None.
+/// It is initialized when choosing the world.
+#[derive(Resource, Default)]
+pub struct WorldName {
+    pub name: Option<String>,
+}
+
 pub const CHUNK_SIZE: usize = 16;
 pub const CHUNK_HEIGHT: usize = 8;
 
@@ -22,7 +30,7 @@ pub const CHUNK_HEIGHT: usize = 8;
 /// game_map.map.get((chunks_x, chunks_z)) // is a Chunk
 /// ```
 #[serde_as]
-#[derive(Resource, Serialize, Deserialize)]
+#[derive(Resource, Serialize, Deserialize, Default)]
 pub struct GameMap {
     #[serde_as(as = "Vec<(_,_)>")]
     pub map: HashMap<(i32, i32), Chunk>,

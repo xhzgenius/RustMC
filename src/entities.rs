@@ -16,9 +16,6 @@ impl Plugin for EntityUpdatePlugin {
             (entity_move, gravity)
                 .in_set(OnUpdate(GameState::InGame))
                 .in_schedule(CoreSchedule::FixedUpdate)
-                // .distributive_run_if(on_fixed_timer(std::time::Duration::from_secs_f32(
-                //     TIME_STEP,
-                // ))),
         );
     }
 }
