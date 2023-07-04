@@ -13,7 +13,7 @@
 //! It has states. To be determined...
 //! TODO: Implement the pause UI.
 
-use crate::*;
+use crate::{*, init_game::GameCamera};
 use bevy::prelude::*;
 use std::f32::consts::PI;
 
@@ -47,11 +47,12 @@ impl Plugin for UIPlugin {
         app.add_state::<InGameUIState>();
         app.add_system(init_in_game_ui_text.in_schedule(OnEnter(GameState::InGame)));
         app.add_system(update_in_game_ui_text.in_set(OnUpdate(GameState::InGame)));
+
+        // React to esc in Game state.
         app.add_system(in_game_pause_reaction.in_set(OnUpdate(GameState::InGame)));
 
         // Pause UI
         // Enter the Pause State.
-
         app.add_state::<PauseUIState>();
         app.add_systems((
             enter_pause.in_schedule(OnEnter(GameState::Pause)),
@@ -66,7 +67,7 @@ impl Plugin for UIPlugin {
         app.add_systems((
             pause_index_return_button_reaction.in_set(OnUpdate(PauseUIState::Pause)),
             pause_index_main_menu_button_reaction.in_set(OnUpdate(PauseUIState::Pause)),
-            pause_index_exit_button_reaction.in_set(OnUpdate(PauseUIState::Pause)),
+            //pause_index_exit_button_reaction.in_set(OnUpdate(PauseUIState::Pause)),
         ));
     }
 }
@@ -107,6 +108,10 @@ enum PauseUIState {
 /// A "tag" component for the UI camera.
 #[derive(Component)]
 struct UICamera;
+
+#[derive(Component)]
+struct UICamera1;
+
 /// A "tag" component for a section of main menu UI on index page.
 #[derive(Component)]
 struct MainMenuIndexUI;
@@ -117,29 +122,38 @@ struct MainMenuSettingsUI;
 #[derive(Component)]
 struct MainMenuChooseWorldUI;
 
+/// A "tag" component for a section of main menu UI on exit page.
+#[derive(Component)]
+struct MainMenuExitUI;
+
 /// A "tag" component for a section of pause UI on index page.
 #[derive(Component)]
 struct PauseIndexUI;
-/// A "tag" component for a section of pause UI on return game page.
-#[derive(Component)]
-struct PauseReturnGameUI;
+// /// A "tag" component for a section of pause UI on return game page.
+// #[derive(Component)]
+// struct PauseReturnGameUI;
 
-/// A "tag" component for a section of pause UI on return memu page.
-#[derive(Component)]
-struct PauseReturnMEnuUI;
+// /// A "tag" component for a section of pause UI on return memu page.
+// #[derive(Component)]
+// struct PauseReturnMenuUI;
 
-/// A "tag" component for a section of pause UI on return memu page.
-#[derive(Component)]
-struct PauseReturnMenuUI;
-
-/// A "tag" component for a section of pause UI on exit page.
-#[derive(Component)]
-struct PauseExituUI;
+// /// A "tag" component for a section of pause UI on exit page.
+// #[derive(Component)]
+// struct PauseExitUI;
 
 // Below are the names of individual buttons, texts, etc.
 /// A "name" for the start button on the main menu index.
 #[derive(Component)]
 struct MainMenuIndexUIStartButton;
+
+/// A "name" for the start button on the main menu index.
+#[derive(Component)]
+struct MainMenuIndexUIChooseWorldButton;
+
+/// A "name" for the exit button on the main menu index.
+#[derive(Component)]
+struct MainMenuIndexUIExitButton;
+
 /// A "name" for the bottom-left text area in-game UI.
 #[derive(Component)]
 struct InGameUIBottomLeftText;
@@ -163,8 +177,12 @@ Initialize the UI camera for main menu, and set the UI state to Index.
 fn enter_main_menu(
     mut commands: Commands,
     mut main_menu_state: ResMut<NextState<MainMenuUIState>>,
+    mut query_camera: Query<Entity, With<GameCamera>>,
 ) {
     main_menu_state.set(MainMenuUIState::Index);
+    for camera in &query_camera {
+        commands.entity(camera).despawn_recursive();
+    }
     commands.spawn((UICamera, Camera2dBundle { ..default() }));
 }
 /**
@@ -232,6 +250,62 @@ fn init_main_menu_index(mut commands: Commands, asset_server: Res<AssetServer>) 
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 "Start!",
+                TextStyle {
+                    font: asset_server.load("fonts/指尖隶书体.ttf"),
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                },
+            ));
+        });
+    commands
+        .spawn((
+            MainMenuIndexUI,
+            MainMenuIndexUIChooseWorldButton,
+            ButtonBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Percent(20.),
+                        right: Val::Percent(50.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::BLACK),
+                ..default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                "Choose World",
+                TextStyle {
+                    font: asset_server.load("fonts/指尖隶书体.ttf"),
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                },
+            ));
+        });
+    commands
+        .spawn((
+            MainMenuIndexUI,
+            MainMenuIndexUIExitButton,
+            ButtonBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect {
+                        bottom: Val::Percent(10.),
+                        right: Val::Percent(50.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                background_color: BackgroundColor(Color::BLACK),
+                ..default()
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                "Exit",
                 TextStyle {
                     font: asset_server.load("fonts/指尖隶书体.ttf"),
                     font_size: 50.0,
@@ -364,7 +438,10 @@ Camera rotation (vertical, around X-axis): {:.4} degrees",
 }
 
 /// From in_game state to pause state
-fn in_game_pause_reaction(key: Res<Input<KeyCode>>, mut game_state: ResMut<NextState<GameState>>) {
+fn in_game_pause_reaction(
+    key: Res<Input<KeyCode>>, 
+    mut game_state: ResMut<NextState<GameState>>
+) {
     if key.pressed(KeyCode::Escape) {
         game_state.set(GameState::Pause);
     }
@@ -373,9 +450,12 @@ fn in_game_pause_reaction(key: Res<Input<KeyCode>>, mut game_state: ResMut<NextS
 /**
     Initialize the UI camera for pause state
 */
-fn enter_pause(mut commands: Commands, mut pause_state: ResMut<NextState<PauseUIState>>) {
+fn enter_pause(
+    mut commands: Commands, 
+    mut pause_state: ResMut<NextState<PauseUIState>>
+) {
     pause_state.set(PauseUIState::Pause);
-    commands.spawn((UICamera, Camera2dBundle { ..default() }));
+    //commands.spawn((UICamera1, Camera2dBundle { ..default() }));
 }
 
 /**
@@ -384,12 +464,9 @@ fn enter_pause(mut commands: Commands, mut pause_state: ResMut<NextState<PauseUI
 fn exit_pause(
     mut commands: Commands,
     mut pause_state: ResMut<NextState<PauseUIState>>,
-    query_camera: Query<Entity, With<UICamera>>,
+    query_camera: Query<Entity, With<GameCamera>>,
 ) {
     pause_state.set(PauseUIState::None);
-    for camera in &query_camera {
-        commands.entity(camera).despawn_recursive();
-    }
 }
 
 /**
@@ -509,15 +586,18 @@ fn init_pause_index(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 /**
-Clears the main menu index page UI.
+Clears the pause index page UI.
  */
-fn clear_pause_index(mut commands: Commands, query_ui: Query<Entity, With<MainMenuIndexUI>>) {
+fn clear_pause_index(mut commands: Commands, query_ui: Query<Entity, With<PauseIndexUI>>) {
     for ui in &query_ui {
         commands.entity(ui).despawn_recursive();
     }
 }
 
 /// Pause state mouse response.
+/**
+   Return button.
+*/
 fn pause_index_return_button_reaction(
     mut interaction_query: Query<&Interaction, With<PauseIndexUIReturnButton>>,
     mut game_state: ResMut<NextState<GameState>>,
@@ -536,6 +616,7 @@ fn pause_index_main_menu_button_reaction(
     mut interaction_query: Query<&Interaction, With<PauseIndexUIMainmenuButton>>,
     mut game_state: ResMut<NextState<GameState>>,
 ) {
+
     for interaction in &mut interaction_query {
         match *interaction {
             Interaction::Clicked => {
