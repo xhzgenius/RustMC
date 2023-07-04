@@ -9,10 +9,9 @@ use bevy::prelude::*;
 pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(walk);
-        app.add_system(rotate);
-        app.add_system(head_up);
-        app.add_system(lock_mouse_cursor);
+        app.add_systems(
+            (walk, rotate, head_up, lock_mouse_cursor).in_set(OnUpdate(GameState::InGame)),
+        );
     }
 }
 
@@ -67,7 +66,9 @@ fn walk(
 This system is used to lock mouse cursor position when mouse is in the window.
  */
 fn lock_mouse_cursor(mut windows: Query<&mut Window>, key: Res<Input<KeyCode>>) {
-    let mut window = windows.get_single_mut().unwrap();
+    let mut window = windows
+        .get_single_mut()
+        .expect("There is not exactly one window. ");
 
     if key.pressed(KeyCode::Escape) {
         return;

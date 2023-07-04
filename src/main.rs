@@ -2,8 +2,8 @@ mod blocks;
 mod control;
 mod entities;
 mod gamemap;
-mod player;
 mod init_game;
+mod player;
 mod ui;
 
 use bevy::app::PluginGroupBuilder;
@@ -14,14 +14,15 @@ The enum that represents the state of the game. This is a global resource.
  */
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 enum GameState {
-    #[default]
     InGame,
+    #[default]
     MainMenu,
+    Pause,
 }
 
 /**
 The plugin group that is used in game,
-including render, control, collision, and entity update. 
+including render, control, collision, and entity update.
  */
 struct InGamePluginGroup;
 impl PluginGroup for InGamePluginGroup {

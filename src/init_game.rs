@@ -10,7 +10,7 @@ pub struct InitGamePlugin;
 impl Plugin for InitGamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(gamemap::load_gamemap("./saves/test_gamemap.json"));
-        app.add_startup_system(init_blocks_and_entities);
+        app.add_system(init_blocks_and_entities.in_schedule(OnEnter(GameState::InGame)));
     }
 }
 

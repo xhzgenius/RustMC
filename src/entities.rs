@@ -1,6 +1,8 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, time::common_conditions::on_fixed_timer};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
+
+use crate::GameState;
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
@@ -10,8 +12,13 @@ pub struct EntityUpdatePlugin;
 impl Plugin for EntityUpdatePlugin {
     fn build(&self, app: &mut App) {
         // Update entities at fixed intervals.
-        app.insert_resource(FixedTime::new_from_secs(TIME_STEP));
-        app.add_system(entity_move.in_schedule(CoreSchedule::FixedUpdate));
+        app.add_system(
+            entity_move
+                .in_set(OnUpdate(GameState::InGame))
+                .run_if(on_fixed_timer(std::time::Duration::from_secs_f32(
+                    TIME_STEP,
+                ))),
+        );
     }
 }
 
