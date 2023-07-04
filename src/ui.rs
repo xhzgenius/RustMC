@@ -22,14 +22,28 @@ use std::f32::consts::PI;
 pub struct UIPlugin;
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
+        // Main menu UI.
         app.add_state::<MainMenuUIState>();
         // Enter or exit the whole main menu.
-        app.add_system(enter_main_menu.in_schedule(OnEnter(GameState::MainMenu)));
-        app.add_system(exit_main_menu.in_schedule(OnExit(GameState::MainMenu)));
-        // Show or clear each state of main menu.
-        app.add_system(init_main_menu_index.in_schedule(OnEnter(MainMenuUIState::Index)));
-        app.add_system(clear_main_menu_index.in_schedule(OnExit(MainMenuUIState::Index)));
+        app.add_systems((
+            enter_main_menu.in_schedule(OnEnter(GameState::MainMenu)),
+            exit_main_menu.in_schedule(OnExit(GameState::MainMenu)),
+        ));
+        // Show or clear UI of each state of main menu.
+        app.add_systems((
+            init_main_menu_index.in_schedule(OnEnter(MainMenuUIState::Index)),
+            clear_main_menu_index.in_schedule(OnExit(MainMenuUIState::Index)),
+            init_main_menu_choose_world.in_schedule(OnEnter(MainMenuUIState::ChooseWorld)),
+            clear_main_menu_choose_world.in_schedule(OnExit(MainMenuUIState::ChooseWorld)),
+            init_main_menu_settings.in_schedule(OnEnter(MainMenuUIState::Settings)),
+            clear_main_menu_settings.in_schedule(OnExit(MainMenuUIState::Settings)),
+        ));
+        // React to clicks.
+        app.add_systems((
+            main_menu_index_start_button_reaction.in_set(OnUpdate(MainMenuUIState::Index)),
+        ));
 
+        // In-game UI.
         app.add_state::<InGameUIState>();
         app.add_system(init_in_game_ui_text.in_schedule(OnEnter(GameState::InGame)));
         app.add_system(update_in_game_ui_text.in_set(OnUpdate(GameState::InGame)));
@@ -58,7 +72,7 @@ enum InGameUIState {
     Pause,
 }
 
-// These are the group identifiers of the buttons, texts, etc.
+// Below are the group identifiers of the buttons, texts, etc.
 /// A "tag" component for the UI camera.
 #[derive(Component)]
 struct UICamera;
@@ -80,6 +94,7 @@ struct MainMenuIndexUIStartButton;
 #[derive(Component)]
 struct InGameUIBottomLeftText;
 
+// Below are the behaviors when state changes.
 /**
 Initialize the UI camera for main menu, and set the UI state to Index.
  */
@@ -137,6 +152,7 @@ fn init_main_menu_index(mut commands: Commands, asset_server: Res<AssetServer>) 
     commands
         .spawn((
             MainMenuIndexUI,
+            MainMenuIndexUIStartButton,
             ButtonBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
@@ -169,6 +185,57 @@ Clears the main menu index page UI.
 fn clear_main_menu_index(mut commands: Commands, query_ui: Query<Entity, With<MainMenuIndexUI>>) {
     for ui in &query_ui {
         commands.entity(ui).despawn_recursive();
+    }
+}
+
+/**
+Initialize the main menu UI on choose world page.
+ */
+fn init_main_menu_choose_world(mut commands: Commands, asset_server: Res<AssetServer>) {}
+
+/**
+Clears the main menu choose world page UI.
+ */
+fn clear_main_menu_choose_world(
+    mut commands: Commands,
+    query_ui: Query<Entity, With<MainMenuChooseWorldUI>>,
+) {
+    for ui in &query_ui {
+        commands.entity(ui).despawn_recursive();
+    }
+}
+
+/**
+Initialize the main menu UI on settings page.
+ */
+fn init_main_menu_settings(mut commands: Commands, asset_server: Res<AssetServer>) {}
+
+/**
+Clears the main menu settings page UI.
+ */
+fn clear_main_menu_settings(
+    mut commands: Commands,
+    query_ui: Query<Entity, With<MainMenuSettingsUI>>,
+) {
+    for ui in &query_ui {
+        commands.entity(ui).despawn_recursive();
+    }
+}
+
+// Below is how to react to clicks.
+
+/// Enter the game.
+fn main_menu_index_start_button_reaction(
+    mut interaction_query: Query<&Interaction, With<MainMenuIndexUIStartButton>>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    for interaction in &mut interaction_query {
+        match *interaction {
+            Interaction::Clicked => {
+                game_state.set(GameState::InGame);
+            }
+            _ => {}
+        }
     }
 }
 
