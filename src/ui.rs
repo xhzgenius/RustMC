@@ -49,6 +49,7 @@ impl Plugin for UIPlugin {
         // In-game UI.
         app.add_state::<InGameUIState>();
         app.add_system(init_in_game_ui_text.in_schedule(OnEnter(GameState::InGame)));
+        app.add_system(update_in_game_ui_cursor.in_set(OnUpdate(GameState::InGame)));
         app.add_system(update_in_game_ui_text.in_set(OnUpdate(GameState::InGame)));
 
         // React to esc in Game state.
@@ -145,6 +146,10 @@ struct MainMenuIndexUIExitButton;
 /// A "name" for the bottom-left text area in-game UI.
 #[derive(Component)]
 struct InGameUIBottomLeftText;
+
+/// A "name" for the center cursor in-game UI.
+#[derive(Component)]
+struct InGameUICenterCursor;
 
 /// A "name" for the return game button on the pause index.
 #[derive(Component)]
@@ -424,6 +429,45 @@ Camera rotation (vertical, around X-axis): {:.4} degrees",
             camera_transform.rotation.to_euler(EulerRot::XYZ).0 * 180. / PI
         );
     }
+}
+
+/**
+Add cursor in the center of the screen.
+ */
+fn update_in_game_ui_cursor(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    // mut cursor: Query<&mut Picture, With<InGameUICenterCursor>>,
+    query_player: Query<
+        (&entities::EntityStatusPointer, &GlobalTransform),
+        With<player::MainPlayer>,
+    >,
+    query_camera: Query<(&Transform, &GlobalTransform), With<init_game::GameCamera>>,
+) {
+    commands.spawn((
+        MainMenuIndexUI,
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "+",
+            TextStyle {
+                font: asset_server.load("fonts/msyh.ttf"),
+                font_size: 50.0,
+                color: Color::WHITE,
+            },
+        ) // Set the alignment of the Text
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                left: Val::Percent(50.),
+                top: Val::Percent(50.),
+                ..default()
+            },
+            size: Size::new(Val::Percent(40.), Val::Percent(20.)),
+            ..default()
+        }),
+    ));
 }
 
 /// From in_game state to pause state
