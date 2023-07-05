@@ -128,17 +128,6 @@ struct MainMenuExitUI;
 /// A "tag" component for a section of pause UI on index page.
 #[derive(Component)]
 struct PauseIndexUI;
-// /// A "tag" component for a section of pause UI on return game page.
-// #[derive(Component)]
-// struct PauseReturnGameUI;
-
-// /// A "tag" component for a section of pause UI on return memu page.
-// #[derive(Component)]
-// struct PauseReturnMenuUI;
-
-// /// A "tag" component for a section of pause UI on exit page.
-// #[derive(Component)]
-// struct PauseExitUI;
 
 // Below are the names of individual buttons, texts, etc.
 /// A "name" for the start button on the main menu index.

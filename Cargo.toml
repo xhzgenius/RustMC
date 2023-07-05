@@ -16,6 +16,10 @@ walkdir = "2.3.3"
 # Otherwise you will need to include libbevy_dylib alongside your game if you want it to run. 
 # If you remove the "dynamic" feature, your game executable can run standalone.
 
+rand = "*"
+rand_distr = "*"
+noise ="*"
+
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
