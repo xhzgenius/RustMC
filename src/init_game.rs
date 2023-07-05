@@ -271,7 +271,7 @@ fn insert_entity_tags(entity_commands: &mut EntityCommands, entity_type: &str) {
                     GameCamera,
                     Camera3dBundle {
                         // transform: Transform::from_xyz(0., 3.0, 8.0), // Third person camera
-                        transform: Transform::from_xyz(0., 1.7, -0.4), // First person camera
+                        transform: Transform::from_xyz(0., 1.7, 0.0), // First person camera
                         ..default()
                     },
                 ));

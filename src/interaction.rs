@@ -65,13 +65,12 @@ fn player_find_target(
         let max_z = box_.max().z + status.position.z;
         for point_id in 0..points.len() {
             let point = points[point_id];
-            if min_x < point.x
-                && point.x < max_x
-                && min_y < point.y
-                && point.y < max_y
-                && min_z < point.z
-                && point.z < max_z
-                && point_id < nearest_point_id
+            if entities::collide_with(
+                status.position + Vec3::new(box_.min().x, box_.min().y, box_.min().z),
+                status.position + Vec3::new(box_.max().x, box_.max().y, box_.max().z),
+                point,
+                point,
+            ) && point_id < nearest_point_id
             {
                 // In range.
                 target.entity_status_ptr = Some(entities::EntityStatusPointer {

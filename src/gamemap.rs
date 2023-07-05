@@ -1,5 +1,8 @@
 use crate::*;
 use bevy::prelude::*;
+use noise::*;
+use rand::*;
+use rand_distr::*;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::array;
@@ -10,9 +13,6 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
-use rand_distr::*;
-use rand::*;
-use noise::*;
 
 /// The static variable representing the world's name.
 /// At the start of the main menu, it is None.
@@ -50,10 +50,10 @@ impl GameMap {
         let x = xyz[0] as i32;
         let y = xyz[1] as usize;
         let z = xyz[2] as i32;
-        let chunk_x = x / 16;
-        let chunk_z = z / 16;
-        let newx: usize = ((x % 16 + 16) % 16).try_into().unwrap();
-        let newz: usize = ((z % 16 + 16) % 16).try_into().unwrap();
+        let chunk_x = x.div_euclid(16);
+        let chunk_z = z.div_euclid(16);
+        let newx: usize = (x-16*chunk_x).try_into().unwrap();
+        let newz: usize = (z-16*chunk_z).try_into().unwrap();
         if y >= CHUNK_HEIGHT {
             return None;
         }
@@ -76,30 +76,41 @@ pub struct Chunk {
     pub entities: Vec<Arc<Mutex<entities::EntityStatus>>>,
 }
 
-
 /**
 Returns a chunk with random height at each position, no entities inside the chunk.
 Use Berlin Noise with different freqencies and amplitude to show different terrains.
  */
-fn random_chunk(xx: usize,zz: usize, seed1: u32, seed2: u32, seed3: u32) -> Chunk {
+fn random_chunk(xx: usize, zz: usize, seed1: u32, seed2: u32, seed3: u32) -> Chunk {
     let mut blocks: ChunkBlocks = Default::default();
-    let mut height: ChunkBlocksXZ =Default::default();
+    let mut height: ChunkBlocksXZ = Default::default();
     //let normal = Normal::new(4.0, 1.0).unwrap();
     let noise1 = Perlin::new(seed1);
     let noise2 = Perlin::new(seed2);
     let noise3 = Perlin::new(seed3);
-    let world_size = (CHUNK_LEN * CHUNK_SIZE) as f64; 
+    let world_size = (CHUNK_LEN * CHUNK_SIZE) as f64;
     // let xx = 0;
     // let zz = 0;
 
     for x in 0..CHUNK_SIZE {
         for z in 0..CHUNK_SIZE {
-            let noise_1 = CHUNK_HEIGHT as f64 / 2.0 * noise1.get([(x + xx * CHUNK_SIZE) as f64 / world_size, (z + zz * CHUNK_SIZE) as f64 / world_size]);
-            let noise_2 = CHUNK_HEIGHT as f64 / 4.0 * noise2.get([((x + xx * CHUNK_SIZE) as f64 / world_size * 3.0).fract()  , ((z + zz * CHUNK_SIZE) as f64 / world_size * 3.0).fract()]);
-            let noise_3 = CHUNK_HEIGHT as f64 / 8.0 * noise3.get([((x + xx * CHUNK_SIZE) as f64 / world_size * 7.0).fract()  , ((z + zz * CHUNK_SIZE) as f64 / world_size * 7.0).fract()]);
-            height[x][z] = (noise_1 + noise_2 +noise_3) as usize + CHUNK_HEIGHT / 2;
+            let noise_1 = CHUNK_HEIGHT as f64 / 2.0
+                * noise1.get([
+                    (x + xx * CHUNK_SIZE) as f64 / world_size,
+                    (z + zz * CHUNK_SIZE) as f64 / world_size,
+                ]);
+            let noise_2 = CHUNK_HEIGHT as f64 / 4.0
+                * noise2.get([
+                    ((x + xx * CHUNK_SIZE) as f64 / world_size * 3.0).fract(),
+                    ((z + zz * CHUNK_SIZE) as f64 / world_size * 3.0).fract(),
+                ]);
+            let noise_3 = CHUNK_HEIGHT as f64 / 8.0
+                * noise3.get([
+                    ((x + xx * CHUNK_SIZE) as f64 / world_size * 7.0).fract(),
+                    ((z + zz * CHUNK_SIZE) as f64 / world_size * 7.0).fract(),
+                ]);
+            height[x][z] = (noise_1 + noise_2 + noise_3) as usize + CHUNK_HEIGHT / 2;
             height[x][z] = usize::max(1, min(CHUNK_HEIGHT, height[x][z]));
-            
+
             for y in 0..height[x][z] {
                 blocks[x][y][z] = 210;
             }
@@ -152,7 +163,7 @@ pub fn new_gamemap() -> GameMap {
     for x in -3..3 {
         for z in -3..3 {
             let (xx, zz) = ((x + 3) as usize, (z + 3) as usize);
-            let mut chunk = random_chunk(xx ,zz, seed1, seed2, seed3);
+            let mut chunk = random_chunk(xx, zz, seed1, seed2, seed3);
             if x == 0 && z == 0 {
                 let proper_y: f32 = CHUNK_HEIGHT as f32;
                 chunk
