@@ -29,7 +29,7 @@ fn init_blocks_and_entities(
 ) {
     // Load game map or create a new game map.
     *game_map = match &world_name.name {
-        Some(name) => gamemap::load_gamemap(&name),
+        Some(name) => gamemap::load_gamemap(&world_name.name.clone().unwrap()),
         None => {
             *world_name = gamemap::WorldName {
                 name: Some("New World".to_string()),
