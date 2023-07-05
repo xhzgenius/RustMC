@@ -23,14 +23,19 @@ fn init_blocks_and_entities(
     mut meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
     mut game_map: ResMut<gamemap::GameMap>,
-    world_name: Res<gamemap::WorldName>,
+    mut world_name: ResMut<gamemap::WorldName>,
     mut game_state: ResMut<NextState<GameState>>,
     query_camera: Query<Entity, With<ui::UICamera>>,
 ) {
     // Load game map or create a new game map.
     *game_map = match &world_name.name {
         Some(name) => gamemap::load_gamemap(&name),
-        None => gamemap::new_gamemap(),
+        None => {
+            *world_name = gamemap::WorldName {
+                name: Some("New World".to_string()),
+            };
+            gamemap::new_gamemap()
+        }
     };
     // Prepare model for a block.
     let block_mesh = meshes.add(

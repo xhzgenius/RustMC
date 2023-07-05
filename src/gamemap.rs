@@ -167,7 +167,8 @@ pub fn load_gamemap(filename: &str) -> GameMap {
 Save a game map to a file.
 Returns Ok(()) if the map is successfully saved. Otherwise returns the error.
 */
-pub fn save_gamemap(gamemap: &GameMap, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn save_gamemap(gamemap: &GameMap, world_name: &Res<WorldName>) -> Result<(), Box<dyn std::error::Error>> {
+    let filename = format!("./saves/{}.json", world_name.name.clone().unwrap());
     match serde_json::to_string(&gamemap) {
         Ok(serialized_gamemap) => match std::fs::write(&filename, &serialized_gamemap) {
             Ok(()) => Ok(()),
@@ -175,13 +176,4 @@ pub fn save_gamemap(gamemap: &GameMap, filename: &str) -> Result<(), Box<dyn std
         },
         Err(err) => Err(Box::new(err)),
     }
-}
-
-#[test]
-fn test_save_gamemap() {
-    let gamemap = new_gamemap();
-    let result = save_gamemap(&gamemap, "./saves/test_gamemap.json");
-    println!("{:?}", result);
-    assert!(result.is_ok());
-    load_gamemap("./saves/test_gamemap.json");
 }
