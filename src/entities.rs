@@ -63,7 +63,6 @@ pub struct EntityStatus {
 }
 
 fn check_whether_in_game(game_state: Res<State<GameState>>) -> bool {
-    println!("{:?}", game_state);
     return game_state.0 == GameState::InGame;
 }
 

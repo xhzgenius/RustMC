@@ -13,8 +13,8 @@
 //! It has states. To be determined...
 //! TODO: Implement the pause UI.
 
-use crate::{*, init_game::GameCamera};
-use bevy::prelude::*;
+use crate::{init_game::GameCamera, *};
+use bevy::{prelude::*, ecs::world};
 use std::{
     f32::consts::PI,
     sync::{Arc, Mutex},
@@ -176,12 +176,12 @@ Initialize the UI camera for main menu, and set the UI state to Index.
 fn enter_main_menu(
     mut commands: Commands,
     mut main_menu_state: ResMut<NextState<MainMenuUIState>>,
-    mut query_camera: Query<Entity, With<GameCamera>>,
+    // query_camera: Query<Entity, With<GameCamera>>,
 ) {
     main_menu_state.set(MainMenuUIState::Index);
-    for camera in &query_camera {
-        commands.entity(camera).despawn_recursive();
-    }
+    // for camera in &query_camera {
+    //     commands.entity(camera).despawn_recursive();
+    // }
     commands.spawn((UICamera, Camera2dBundle { ..default() }));
 }
 /**
@@ -438,10 +438,7 @@ Camera rotation (vertical, around X-axis): {:.4} degrees",
 }
 
 /// From in_game state to pause state
-fn in_game_pause_reaction(
-    key: Res<Input<KeyCode>>, 
-    mut game_state: ResMut<NextState<GameState>>
-) {
+fn in_game_pause_reaction(key: Res<Input<KeyCode>>, mut game_state: ResMut<NextState<GameState>>) {
     if key.pressed(KeyCode::Escape) {
         game_state.set(GameState::Pause);
     }
@@ -450,10 +447,7 @@ fn in_game_pause_reaction(
 /**
     Initialize the UI camera for pause state
 */
-fn enter_pause(
-    mut commands: Commands, 
-    mut pause_state: ResMut<NextState<PauseUIState>>
-) {
+fn enter_pause(mut commands: Commands, mut pause_state: ResMut<NextState<PauseUIState>>) {
     pause_state.set(PauseUIState::Pause);
     //commands.spawn((UICamera1, Camera2dBundle { ..default() }));
 }
@@ -615,11 +609,36 @@ fn pause_index_return_button_reaction(
 fn pause_index_main_menu_button_reaction(
     mut interaction_query: Query<&Interaction, With<PauseIndexUIMainmenuButton>>,
     mut game_state: ResMut<NextState<GameState>>,
+    gamemap: Res<gamemap::GameMap>,
+    mut commands: Commands,
+    world_name: Res<gamemap::WorldName>,
+    query_game_entities: Query<Entity, With<entities::Entity>>,
+    query_game_blocks: Query<Entity, With<blocks::Block>>,
+    query_game_camera: Query<Entity, With<init_game::GameCamera>>,
+    query_game_lights: Query<Entity, With<DirectionalLight>>,
 ) {
-
     for interaction in &mut interaction_query {
         match *interaction {
             Interaction::Clicked => {
+                match gamemap::save_gamemap(&gamemap, &world_name) {
+                    Ok(_) => {
+                        println!("Saved world to {}", &world_name.name.clone().unwrap());
+                        // Despawn everything in the game.
+                        for entity in &query_game_entities {
+                            commands.entity(entity).despawn_recursive();
+                        }
+                        for entity in &query_game_blocks {
+                            commands.entity(entity).despawn_recursive();
+                        }
+                        // for entity in &query_game_camera {
+                        //     commands.entity(entity).despawn_recursive();
+                        // } // No need. Seems the camera is already despawned when exiting InGame state?
+                        for entity in &query_game_lights {
+                            commands.entity(entity).despawn_recursive();
+                        }
+                    }
+                    e => panic!("Save gamemap failed: {:?}", e),
+                }
                 game_state.set(GameState::MainMenu);
             }
             _ => {}

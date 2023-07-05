@@ -10,16 +10,17 @@ pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (walk, rotate, head_up, lock_mouse_cursor)
-                .in_set(OnUpdate(GameState::InGame)),
+            (walk, rotate, head_up, lock_mouse_cursor).in_set(OnUpdate(GameState::InGame)),
         );
+        app.add_systems((
+            hide_cursor.in_schedule(OnEnter(GameState::InGame)),
+            show_cursor.in_schedule(OnExit(GameState::InGame)),
+        ));
     }
 }
 
 const MAX_VELOCITY: f32 = 4.;
-/**
-This system is used to make the main player walk.
- */
+/// This system is used to make the main player walk.
 fn walk(
     keys: Res<Input<KeyCode>>,
     mut query_main_player_status: Query<
@@ -55,7 +56,8 @@ fn walk(
     if keys.pressed(KeyCode::LShift) {
         status.velocity.y = -MAX_VELOCITY;
     }
-    let abs_velocity: f32 = f32::sqrt(status.velocity.x*status.velocity.x + status.velocity.z*status.velocity.z);
+    let abs_velocity: f32 =
+        f32::sqrt(status.velocity.x * status.velocity.x + status.velocity.z * status.velocity.z);
     status.velocity.x *= MAX_VELOCITY / f32::max(1., abs_velocity);
     status.velocity.z *= MAX_VELOCITY / f32::max(1., abs_velocity);
     // we can check multiple at once with `.any_*`
@@ -64,27 +66,35 @@ fn walk(
     }
 }
 
-/**
-This system is used to lock mouse cursor position when mouse is in the window.
- */
+/// This system is used to lock mouse cursor position when mouse is in the window.
 fn lock_mouse_cursor(mut windows: Query<&mut Window>, key: Res<Input<KeyCode>>) {
     let mut window = windows
         .get_single_mut()
         .expect("There is not exactly one window. ");
-
-    if key.pressed(KeyCode::Tab) {
-        return;
-    }
     // for a game that doesn't use the cursor (like a shooter):
     // use `Locked` mode to keep the cursor in one place
     let lock_position = Vec2::new(window.width() / 2., window.height() / 2.);
     window.set_cursor_position(Some(lock_position));
 }
 
+/// This sstem is used to hide cursor when entering InGame state.
+fn hide_cursor(mut windows: Query<&mut Window>) {
+    let mut window = windows
+        .get_single_mut()
+        .expect("There is not exactly one window. ");
+    window.cursor.visible = false;
+}
+
+/// This sstem is used to show cursor when exiting InGame state.
+fn show_cursor(mut windows: Query<&mut Window>) {
+    let mut window = windows
+        .get_single_mut()
+        .expect("There is not exactly one window. ");
+    window.cursor.visible = true;
+}
+
 const MOUSE_SENSITIVITY_HORIZONTAL: f32 = 0.2;
-/**
-This system is used to rotate main player horizontally (around Y-axis).
-*/
+/// This system is used to rotate main player horizontally (around Y-axis).
 fn rotate(
     mut motion_evr: EventReader<MouseMotion>,
     mut query_main_player_transform: Query<&mut Transform, With<player::MainPlayer>>,
@@ -98,9 +108,7 @@ fn rotate(
 }
 
 const MOUSE_SENSITIVITY_VERTICAL: f32 = 0.2;
-/**
-This system is used to control the vertical angle of the camera.
- */
+/// This system is used to control the vertical angle of the camera.
 fn head_up(
     mut motion_evr: EventReader<MouseMotion>,
     mut query_camera_transform: Query<&mut Transform, With<init_game::GameCamera>>,
@@ -117,25 +125,4 @@ fn head_up(
     }
 }
 
-/// Close the focused window whenever the escape key (<kbd>Esc</kbd>) is pressed
-///
-/// This is useful for examples or prototyping.
-pub fn close_on_esc(
-    mut commands: Commands,
-    focused_windows: Query<(Entity, &Window)>,
-    input: Res<Input<KeyCode>>,
-    gamemap: Res<gamemap::GameMap>,
-) {
-    for (window, focus) in focused_windows.iter() {
-        if !focus.focused {
-            continue;
-        }
 
-        if input.just_pressed(KeyCode::Escape) {
-            match gamemap::save_gamemap(&gamemap, "./saves/test_gamemap.json") {
-                Ok(_) => commands.entity(window).despawn(),
-                e => panic!("Save gamemap failed: {:?}", e),
-            }
-        }
-    }
-}
