@@ -153,7 +153,9 @@ Load a game map from a file.
 Returns GameMap if the file is successfully loaded. Otherwise panics.
 (The Bevy framework does not support returning a Result here.)
 */
-pub fn load_gamemap(filename: &str) -> GameMap {
+pub fn load_gamemap(world_name: &str) -> GameMap {
+    let filename = format!("./saves/{}.json", world_name);
+    println!("Loading world from {}", filename);
     match std::fs::read_to_string(filename) {
         Ok(serialized_gamemap) => match serde_json::from_str(&serialized_gamemap) {
             Ok(gamemap) => gamemap,
