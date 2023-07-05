@@ -110,6 +110,7 @@ pub fn new_gamemap() -> GameMap {
                         rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
+                        attack_cd: 0.,
                     })));
                 chunk
                     .entities
@@ -120,6 +121,7 @@ pub fn new_gamemap() -> GameMap {
                         rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
+                        attack_cd: 0.,
                     })));
                 chunk
                     .entities
@@ -130,6 +132,7 @@ pub fn new_gamemap() -> GameMap {
                         rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
+                        attack_cd: 0.,
                     })));
                 chunk
                     .entities
@@ -140,6 +143,7 @@ pub fn new_gamemap() -> GameMap {
                         rotation: PI * 0.,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
+                        attack_cd: 0.,
                     })));
             }
             new_map.insert((x, z), chunk);
@@ -169,7 +173,10 @@ pub fn load_gamemap(world_name: &str) -> GameMap {
 Save a game map to a file.
 Returns Ok(()) if the map is successfully saved. Otherwise returns the error.
 */
-pub fn save_gamemap(gamemap: &GameMap, world_name: &Res<WorldName>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn save_gamemap(
+    gamemap: &GameMap,
+    world_name: &Res<WorldName>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let filename = format!("./saves/{}.json", world_name.name.clone().unwrap());
     match serde_json::to_string(&gamemap) {
         Ok(serialized_gamemap) => match std::fs::write(&filename, &serialized_gamemap) {

@@ -49,6 +49,7 @@ fn player_find_target(
         .expect("Not exactly one main player!");
     let center = transform.translation();
     let forward = transform.forward();
+    let mut nearest_point_id: usize = 114514;
     let mut points = vec![];
     for i in 0..51 {
         points.push(center + forward * i as f32 * 0.1);
@@ -62,29 +63,24 @@ fn player_find_target(
         let max_x = box_.max().x + status.position.x;
         let max_y = box_.max().y + status.position.y;
         let max_z = box_.max().z + status.position.z;
-        let mut in_range: bool = false;
-        for point in &points {
-            // println!(
-            //     "Point: {:?}, max_xyz: {} {} {}, min_xyz: {} {} {}",
-            //     point, max_x, max_y, max_z, min_x, min_y, min_z
-            // );
+        for point_id in 0..points.len() {
+            let point = points[point_id];
             if min_x < point.x
                 && point.x < max_x
                 && min_y < point.y
                 && point.y < max_y
                 && min_z < point.z
                 && point.z < max_z
+                && point_id < nearest_point_id
             {
-                in_range = true;
+                // In range.
+                target.entity_status_ptr = Some(entities::EntityStatusPointer {
+                    pointer: Arc::clone(&entity_status_ptr.pointer),
+                });
+                nearest_point_id = point_id;
+                // println!("In range: {:?}", target.entity_status_ptr);
                 break;
             }
-        }
-        if in_range {
-            target.entity_status_ptr = Some(entities::EntityStatusPointer {
-                pointer: Arc::clone(&entity_status_ptr.pointer),
-            });
-            // println!("In range: {:?}", target.entity_status_ptr);
-            break;
         }
     }
     // target.entity_status_ptr = None;

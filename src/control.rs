@@ -125,21 +125,32 @@ fn head_up(
     }
 }
 
+const PLAYER_ATTACK_CD: f32 = 0.6;
 fn operate(
     clicks_input: Res<Input<MouseButton>>,
     event_writer: EventWriter<interaction::GameEntityEvent>,
     target: Res<interaction::PlayerTarget>,
+    query_main_player_status_ptr: Query<&entities::EntityStatusPointer, With<player::MainPlayer>>,
 ) {
+    let mut status = query_main_player_status_ptr
+        .get_single()
+        .expect("Not exactly one main player!")
+        .pointer
+        .lock()
+        .unwrap();
     match &target.entity_status_ptr {
         Some(entity_status_ptr) => {
             if clicks_input.just_pressed(MouseButton::Left) {
-                interaction::send_event_to_entity(
-                    entities::EntityStatusPointer {
-                        pointer: Arc::clone(&entity_status_ptr.pointer),
-                    },
-                    interaction::GameEventOpration::HIT(5), // TODO: Change damage value.
-                    event_writer,
-                );
+                if status.attack_cd <= 0. {
+                    interaction::send_event_to_entity(
+                        entities::EntityStatusPointer {
+                            pointer: Arc::clone(&entity_status_ptr.pointer),
+                        },
+                        interaction::GameEventOpration::HIT(5), // TODO: Change damage value.
+                        event_writer,
+                    );
+                    status.attack_cd = PLAYER_ATTACK_CD;
+                }
             } else if clicks_input.pressed(MouseButton::Right) {
                 interaction::send_event_to_entity(
                     entities::EntityStatusPointer {

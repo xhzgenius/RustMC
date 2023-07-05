@@ -60,6 +60,8 @@ pub struct EntityStatus {
     pub scaling: Vec3,
     /// The absolute velocity (Vec3).
     pub velocity: Vec3,
+    /// The attack CD, In seconds.
+    pub attack_cd: f32,
 }
 
 fn check_whether_in_game(game_state: Res<State<GameState>>) -> bool {
@@ -83,6 +85,7 @@ fn entity_move(
         status.position = transform.translation;
         status.rotation = transform.rotation.to_euler(EulerRot::YZX).0;
         status.scaling = transform.scale;
+        status.attack_cd -= TIME_STEP;
     }
 }
 
