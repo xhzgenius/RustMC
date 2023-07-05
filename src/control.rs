@@ -1,5 +1,5 @@
 use std::f32::consts::PI;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use crate::*;
 use bevy::input::mouse::MouseMotion;
@@ -10,7 +10,7 @@ pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (walk, rotate, head_up, lock_mouse_cursor).in_set(OnUpdate(GameState::InGame)),
+            (walk, rotate, head_up, lock_mouse_cursor, operate).in_set(OnUpdate(GameState::InGame)),
         );
         app.add_systems((
             hide_cursor.in_schedule(OnEnter(GameState::InGame)),
@@ -125,4 +125,39 @@ fn head_up(
     }
 }
 
-
+fn operate(
+    clicks_input: Res<Input<MouseButton>>,
+    event_writer: EventWriter<interaction::GameEntityEvent>,
+    target: Res<interaction::PlayerTarget>,
+) {
+    match &target.entity_status_ptr {
+        Some(entity_status_ptr) => {
+            if clicks_input.just_pressed(MouseButton::Left) {
+                interaction::send_event_to_entity(
+                    entities::EntityStatusPointer {
+                        pointer: Arc::clone(&entity_status_ptr.pointer),
+                    },
+                    interaction::GameEventOpration::HIT(5), // TODO: Change damage value.
+                    event_writer,
+                );
+            } else if clicks_input.pressed(MouseButton::Right) {
+                interaction::send_event_to_entity(
+                    entities::EntityStatusPointer {
+                        pointer: Arc::clone(&entity_status_ptr.pointer),
+                    },
+                    interaction::GameEventOpration::USE,
+                    event_writer,
+                );
+            }
+            return;
+        }
+        None => {}
+    };
+    match target.block {
+        Some(block) => {
+            // TODO: Implement operating blocks
+            return;
+        }
+        None => {}
+    }
+}

@@ -5,6 +5,7 @@ mod gamemap;
 mod init_game;
 mod player;
 mod ui;
+mod interaction;
 
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
@@ -32,6 +33,7 @@ impl PluginGroup for InGamePluginGroup {
         let builder = builder.add(init_game::InitGamePlugin);
         let builder = builder.add(control::ControlPlugin);
         let builder = builder.add(entities::EntityUpdatePlugin);
+        let builder = builder.add(interaction::InteractionPlugin);
         return builder;
     }
 }

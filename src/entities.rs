@@ -12,7 +12,7 @@ impl Plugin for EntityUpdatePlugin {
     fn build(&self, app: &mut App) {
         // Update entities at fixed intervals.
         app.insert_resource(FixedTime::new_from_secs(TIME_STEP));
-        app.add_systems((entity_move, gravity).in_schedule(CoreSchedule::FixedUpdate));
+        app.add_systems((entity_move, gravity, die).in_schedule(CoreSchedule::FixedUpdate));
     }
 }
 
@@ -37,7 +37,7 @@ let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().
 status.health += 1;
 ```
  */
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct EntityStatusPointer {
     pub pointer: Arc<Mutex<EntityStatus>>,
 }
@@ -101,6 +101,22 @@ fn gravity(
             status.velocity += Vec3::new(0., -9.8 * TIME_STEP, 0.);
         } else {
             status.velocity[1] = f32::max(status.velocity[1], 0.);
+        }
+    }
+}
+
+fn die(
+    mut query_entity_status: Query<
+        (bevy::ecs::prelude::Entity, &EntityStatusPointer),
+        With<Entity>,
+    >,
+    mut commands: Commands,
+) {
+    for (entity, status_ptr) in query_entity_status.iter_mut() {
+        let status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
+        if status.health <= 0 {
+            commands.entity(entity).despawn_recursive();
+            println!("{:?} died!!!", entity);
         }
     }
 }
