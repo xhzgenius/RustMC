@@ -201,12 +201,13 @@ pub fn new_gamemap() -> GameMap {
                     })));
             }
             if rand::random::<f32>() < 0.5 {
+
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new((x * 16) as f32 + 5., proper_y, (z * 16) as f32 + -10.),
+                        position: Vec3::new((x * 16) as f32 + rand::random::<f32>() * 16., proper_y, (z * 16) as f32 + rand::random::<f32>() * 16.),
                         rotation: PI * 0.75,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
@@ -218,9 +219,9 @@ pub fn new_gamemap() -> GameMap {
                         entity_type: "Player".to_string(),
                         health: 20,
                         position: Vec3::new(
-                            (x * 16) as f32 + 10.,
+                            (x * 16) as f32 + rand::random::<f32>() * 16.,
                             proper_y,
-                            (z * 16) as f32 + -10.,
+                            (z * 16) as f32 + rand::random::<f32>() * 16.,
                         ),
                         rotation: PI * 1.5,
                         scaling: Vec3::new(1., 1., 1.),
@@ -232,7 +233,7 @@ pub fn new_gamemap() -> GameMap {
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new((x * 16) as f32 + 10., proper_y, (z * 16) as f32 + -8.),
+                        position: Vec3::new((x * 16) as f32 + rand::random::<f32>() * 16., proper_y, (z * 16) as f32 + rand::random::<f32>() * 16.),
                         rotation: PI * 0.25,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
