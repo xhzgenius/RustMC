@@ -2,27 +2,12 @@
 
 北京大学《Rust程序设计》课程作业。Powered by Bevy engine. 
 
-## Releases
+## Latest release
 ### v0.2.0
 Added two new creatures! 👇
 <img width="962" alt="v0 2 0" src="https://github.com/xhzgenius/RustMC/assets/82707775/847261d1-29cd-4468-8409-16bb278f51e2">
 
-**Full Changelog**: https://github.com/xhzgenius/RustMC/compare/release...v0.2.0
-
-### v0.1.0
-#### What's Changed
-* Pause state added. by @xhzgenius in https://github.com/xhzgenius/RustMC/pull/1
-* Save world when return to main menu. by @xhzgenius in https://github.com/xhzgenius/RustMC/pull/2
-* Interaction by @xhzgenius in https://github.com/xhzgenius/RustMC/pull/3
-* UI framework modified. by @xhzgenius in https://github.com/xhzgenius/RustMC/pull/4
-* Choose world and time stamp added. by @mystictides in https://github.com/xhzgenius/RustMC/pull/5
-* Choose world by @xhzgenius in https://github.com/xhzgenius/RustMC/pull/6
-
-#### New Contributors
-* @xhzgenius made their first contribution in https://github.com/xhzgenius/RustMC/pull/1
-* @mystictides made their first contribution in https://github.com/xhzgenius/RustMC/pull/5
-
-**Full Changelog**: https://github.com/xhzgenius/RustMC/commits/release
+**Full Changelog**: [https://github.com/xhzgenius/RustMC/compare/release...v0.2.0](https://github.com/xhzgenius/RustMC/commits/v0.2.0)
 
 ### TODO roadmap
 
