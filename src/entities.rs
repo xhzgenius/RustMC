@@ -113,15 +113,14 @@ fn entity_move(
 }
 
 fn gravity(
-    mut query_entity_status: Query<(&EntityStatusPointer), With<Entity>>,
+    mut query_entity_status: Query<&EntityStatusPointer, With<Entity>>,
     gamemap: Res<gamemap::GameMap>,
     game_state: Res<State<GameState>>,
-    meshes: Res<Assets<Mesh>>,
 ) {
     if check_whether_in_game(game_state) == false {
         return;
     }
-    for (status_ptr) in query_entity_status.iter_mut() {
+    for status_ptr in query_entity_status.iter_mut() {
         let mut status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
         let block_id = gamemap.query_block_by_xyz(status.position);
         if block_id.unwrap_or(-1) < 0 {
@@ -140,6 +139,7 @@ fn die(
     >,
     mut commands: Commands,
     game_state: Res<State<GameState>>,
+    mut gamemap: ResMut<gamemap::GameMap>,
 ) {
     if check_whether_in_game(game_state) == false {
         return;
@@ -147,8 +147,18 @@ fn die(
     for (entity, status_ptr) in query_entity_status.iter_mut() {
         let status: std::sync::MutexGuard<EntityStatus> = status_ptr.pointer.lock().unwrap();
         if status.health <= 0 {
+            // Despawn this entity in the world.
             commands.entity(entity).despawn_recursive();
             println!("{:?} died!!!", entity);
+        }
+    }
+    // Remove dead entities from GameMap. 
+    for (chunk_key, chunk) in gamemap.map.iter_mut() {
+        let mut entities: Vec<_> = chunk.entities.drain(..).collect();
+        for entity in entities.drain(..) {
+            if entity.lock().unwrap().health>0 {
+                chunk.entities.push(entity);
+            }
         }
     }
 }

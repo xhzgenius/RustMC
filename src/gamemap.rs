@@ -45,6 +45,14 @@ pub struct GameMap {
 }
 
 impl GameMap {
+    /// Query a position's chunk that it belongs.
+    pub fn query_chunk_by_xyz(&self, xyz: Vec3) -> (i32, i32) {
+        let x = xyz[0].floor() as i32;
+        let z = xyz[2].floor() as i32;
+        let chunk_x = x.div_euclid(16);
+        let chunk_z = z.div_euclid(16);
+        return (chunk_x, chunk_z);
+    }
     /// Query a block according to the coordinates.
     pub fn query_block_by_xyz(&self, xyz: Vec3) -> Option<i32> {
         let x = xyz[0].floor() as i32;
@@ -52,8 +60,8 @@ impl GameMap {
         let z = xyz[2].floor() as i32;
         let chunk_x = x.div_euclid(16);
         let chunk_z = z.div_euclid(16);
-        let newx: usize = (x-16*chunk_x).try_into().unwrap();
-        let newz: usize = (z-16*chunk_z).try_into().unwrap();
+        let newx: usize = (x - 16 * chunk_x).try_into().unwrap();
+        let newz: usize = (z - 16 * chunk_z).try_into().unwrap();
         if y >= CHUNK_HEIGHT {
             return None;
         }

@@ -54,16 +54,33 @@ fn player_find_target(
     for i in 0..51 {
         points.push(center + forward * i as f32 * 0.1);
     }
-    for (entity_status_ptr, collision_box) in query_entities.iter() {
-        let status = entity_status_ptr.pointer.lock().unwrap();
-        let box_ = meshes.get(collision_box).unwrap().compute_aabb().unwrap();
-        let min_x = box_.min().x + status.position.x;
-        let min_y = box_.min().y + status.position.y;
-        let min_z = box_.min().z + status.position.z;
-        let max_x = box_.max().x + status.position.x;
-        let max_y = box_.max().y + status.position.y;
-        let max_z = box_.max().z + status.position.z;
-        for point_id in 0..points.len() {
+    // Iterate through possible collision points, and take the nearest.
+    for point_id in 0..points.len() {
+        // Check collision with entities.
+        for (entity_status_ptr, collision_box) in query_entities.iter() {
+            let status = entity_status_ptr.pointer.lock().unwrap();
+            let box_ = meshes.get(collision_box).unwrap().compute_aabb().unwrap();
+            let point = points[point_id];
+            if entities::collide_with(
+                status.position + Vec3::new(box_.min().x, box_.min().y, box_.min().z),
+                status.position + Vec3::new(box_.max().x, box_.max().y, box_.max().z),
+                point,
+                point,
+            ) && point_id < nearest_point_id
+            {
+                // In range.
+                target.entity_status_ptr = Some(entities::EntityStatusPointer {
+                    pointer: Arc::clone(&entity_status_ptr.pointer),
+                });
+                nearest_point_id = point_id;
+                // println!("In range: {:?}", target.entity_status_ptr);
+                break;
+            }
+        }
+        // Check collision with blocks.
+        for (entity_status_ptr, collision_box) in query_entities.iter() {
+            let status = entity_status_ptr.pointer.lock().unwrap();
+            let box_ = meshes.get(collision_box).unwrap().compute_aabb().unwrap();
             let point = points[point_id];
             if entities::collide_with(
                 status.position + Vec3::new(box_.min().x, box_.min().y, box_.min().z),
