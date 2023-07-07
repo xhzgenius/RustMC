@@ -67,7 +67,7 @@ fn walk(
 }
 
 /// This system is used to lock mouse cursor position when mouse is in the window.
-fn lock_mouse_cursor(mut windows: Query<&mut Window>, key: Res<Input<KeyCode>>) {
+fn lock_mouse_cursor(mut windows: Query<&mut Window>, _key: Res<Input<KeyCode>>) {
     let mut window = windows
         .get_single_mut()
         .expect("There is not exactly one window. ");

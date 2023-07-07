@@ -2,13 +2,10 @@ use crate::*;
 use bevy::prelude::*;
 use noise::*;
 use rand::*;
-use rand_distr::*;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::array;
 use std::cmp::min;
 use std::f32::consts::PI;
-use std::u64::MAX;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -23,7 +20,7 @@ pub struct WorldName {
 }
 
 pub const CHUNK_SIZE: usize = 16;
-pub const CHUNK_HEIGHT: usize = 16;
+pub const CHUNK_HEIGHT: usize = 32;
 /// Number of CHUNKS in a row.
 pub const CHUNK_LEN: usize = 6;
 
@@ -67,7 +64,7 @@ impl GameMap {
             return None;
         }
         return match self.map.get(&(chunk_x, chunk_z)) {
-            Some(chunk) => Some((newx, y, newz)),
+            Some(_chunk) => Some((newx, y, newz)),
             None => None,
         };
     }
@@ -183,9 +180,9 @@ pub fn new_gamemap() -> GameMap {
     let mut new_map = HashMap::new();
 
     let mut range = rand::thread_rng();
-    let mut seed1 = range.gen_range(0..u32::MAX);
-    let mut seed2 = range.gen_range(0..u32::MAX);
-    let mut seed3 = range.gen_range(0..u32::MAX);
+    let seed1 = range.gen_range(0..u32::MAX);
+    let seed2 = range.gen_range(0..u32::MAX);
+    let seed3 = range.gen_range(0..u32::MAX);
     for x in -3..3 {
         for z in -3..3 {
             let (xx, zz) = ((x + 3) as usize, (z + 3) as usize);

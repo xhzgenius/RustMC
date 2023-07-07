@@ -30,13 +30,11 @@ fn init_blocks_and_entities(
     materials: ResMut<Assets<StandardMaterial>>,
     mut game_map: ResMut<gamemap::GameMap>,
     mut world_name: ResMut<gamemap::WorldName>,
-    mut game_state: ResMut<NextState<GameState>>,
-    query_camera: Query<Entity, With<ui::UICamera>>,
     mut block_entity_id_map: ResMut<BlockEntityIDMap>,
 ) {
     // Load game map or create a new game map.
     *game_map = match &world_name.name {
-        Some(name) => gamemap::load_gamemap(&world_name.name.clone().unwrap()),
+        Some(name) => gamemap::load_gamemap(name),
         None => {
             *world_name = gamemap::WorldName {
                 name: Some("New World".to_string()),
@@ -142,15 +140,19 @@ fn init_blocks_and_entities(
     }
 
     // Spawn the sunlight.
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 30000.,
-            shadows_enabled: true,
+    let mut sunlight_direction = Transform::from_rotation(Quat::from_rotation_x(-PI * 0.25));
+    for _ in 0..4 {
+        commands.spawn(DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                illuminance: 20000.,
+                shadows_enabled: false,
+                ..default()
+            },
+            transform: sunlight_direction,
             ..default()
-        },
-        transform: Transform::from_rotation(Quat::from_rotation_x(-PI * 0.5)),
-        ..default()
-    });
+        });
+        sunlight_direction.rotate_y(PI * 0.5);
+    }
 
     // std::thread::sleep(std::time::Duration::from_secs_f32(2.0));
 }
@@ -183,6 +185,7 @@ fn load_block_textures(
     for block_texture in block_textures {
         block_materials.push(materials.add(StandardMaterial {
             base_color_texture: Some(block_texture.typed()),
+            reflectance: 0.0,
             ..default()
         }));
     }

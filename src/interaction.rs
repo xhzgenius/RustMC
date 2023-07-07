@@ -154,7 +154,7 @@ fn handle_block_events(
             Some((x, y, z)) => {
                 // Target block is found.
                 match event.operation {
-                    GameEventOpration::HIT(damage) => {
+                    GameEventOpration::HIT(_damage) => {
                         gamemap.map.get(&chunk_key).unwrap().blocks.lock().unwrap()[x][y][z] = -1;
                         commands
                             .entity(
