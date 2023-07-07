@@ -4,7 +4,7 @@ version = "0.2.0"
 edition = "2021"
 authors = ["xhzgenius", "mystictides"]
 description = "北京大学《Rust程序设计》课程作业。Powered by Bevy engine. "
-license = ""
+license = "AGPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
