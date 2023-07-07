@@ -128,7 +128,8 @@ fn head_up(
 const PLAYER_ATTACK_CD: f32 = 0.6;
 fn operate(
     clicks_input: Res<Input<MouseButton>>,
-    event_writer: EventWriter<interaction::GameEntityEvent>,
+    entity_event_writer: EventWriter<interaction::GameEntityEvent>,
+    block_event_writer: EventWriter<interaction::GameBlockEvent>,
     target: Res<interaction::PlayerTarget>,
     query_main_player_status_ptr: Query<&entities::EntityStatusPointer, With<player::MainPlayer>>,
 ) {
@@ -147,7 +148,7 @@ fn operate(
                             pointer: Arc::clone(&entity_status_ptr.pointer),
                         },
                         interaction::GameEventOpration::HIT(5), // TODO: Change damage value.
-                        event_writer,
+                        entity_event_writer,
                     );
                     status.attack_cd = PLAYER_ATTACK_CD;
                 }
@@ -157,7 +158,7 @@ fn operate(
                         pointer: Arc::clone(&entity_status_ptr.pointer),
                     },
                     interaction::GameEventOpration::USE,
-                    event_writer,
+                    entity_event_writer,
                 );
             }
             return;
@@ -166,8 +167,19 @@ fn operate(
     };
     match target.block {
         Some(block) => {
-            // TODO: Implement operating blocks
-            return;
+            if clicks_input.just_pressed(MouseButton::Left) {
+                interaction::send_event_to_block(
+                    block,
+                    interaction::GameEventOpration::HIT(0),
+                    block_event_writer,
+                )
+            } else if clicks_input.pressed(MouseButton::Right) {
+                interaction::send_event_to_block(
+                    block,
+                    interaction::GameEventOpration::USE,
+                    block_event_writer,
+                )
+            }
         }
         None => {}
     }

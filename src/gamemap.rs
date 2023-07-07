@@ -53,6 +53,24 @@ impl GameMap {
         let chunk_z = z.div_euclid(16);
         return (chunk_x, chunk_z);
     }
+    /// Converts a block's position to index in chunk if it exists. 
+    pub fn to_integer(&self, xyz: Vec3) -> Option<(usize, usize, usize)>
+    {
+        let x = xyz[0].floor() as i32;
+        let y = xyz[1].floor() as usize;
+        let z = xyz[2].floor() as i32;
+        let chunk_x = x.div_euclid(16);
+        let chunk_z = z.div_euclid(16);
+        let newx: usize = (x - 16 * chunk_x).try_into().unwrap();
+        let newz: usize = (z - 16 * chunk_z).try_into().unwrap();
+        if y >= CHUNK_HEIGHT {
+            return None;
+        }
+        return match self.map.get(&(chunk_x, chunk_z)) {
+            Some(chunk) => Some((newx, y, newz)),
+            None => None,
+        };
+    }
     /// Query a block according to the coordinates.
     pub fn query_block_by_xyz(&self, xyz: Vec3) -> Option<i32> {
         let x = xyz[0].floor() as i32;

@@ -9,9 +9,15 @@ use std::sync::{Arc, Mutex};
 pub struct InitGamePlugin;
 impl Plugin for InitGamePlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<BlockEntityIDMap>();
         app.add_system(init_blocks_and_entities.in_schedule(OnExit(GameState::MainMenu)));
         app.add_system(loading_process.in_set(OnUpdate(GameState::Loading)));
     }
+}
+
+#[derive(Resource, Default)]
+pub struct BlockEntityIDMap {
+    pub map: HashMap<(i32, i32, i32), Entity>,
 }
 
 /**
@@ -26,6 +32,7 @@ fn init_blocks_and_entities(
     mut world_name: ResMut<gamemap::WorldName>,
     mut game_state: ResMut<NextState<GameState>>,
     query_camera: Query<Entity, With<ui::UICamera>>,
+    mut block_entity_id_map: ResMut<BlockEntityIDMap>,
 ) {
     // Load game map or create a new game map.
     *game_map = match &world_name.name {
@@ -63,19 +70,29 @@ fn init_blocks_and_entities(
                 for z in 0..gamemap::CHUNK_SIZE {
                     let block_id = chunk_blocks[x][y][z];
                     if let Some(block_material) = block_materials.get(block_id as usize) {
-                        commands.spawn((
-                            blocks::Block,
-                            PbrBundle {
-                                mesh: block_mesh.clone(),
-                                material: block_material.clone(),
-                                transform: Transform::from_xyz(
-                                    (chunks_x * gamemap::CHUNK_SIZE as i32 + x as i32) as f32,
-                                    y as f32,
-                                    (chunks_z * gamemap::CHUNK_SIZE as i32 + z as i32) as f32,
-                                ),
-                                ..default()
-                            },
-                        ));
+                        let block_entity_id = commands
+                            .spawn((
+                                blocks::Block,
+                                PbrBundle {
+                                    mesh: block_mesh.clone(),
+                                    material: block_material.clone(),
+                                    transform: Transform::from_xyz(
+                                        (chunks_x * gamemap::CHUNK_SIZE as i32 + x as i32) as f32,
+                                        y as f32,
+                                        (chunks_z * gamemap::CHUNK_SIZE as i32 + z as i32) as f32,
+                                    ),
+                                    ..default()
+                                },
+                            ))
+                            .id();
+                        block_entity_id_map.map.insert(
+                            (
+                                chunks_x * gamemap::CHUNK_SIZE as i32 + x as i32,
+                                y as i32,
+                                chunks_z * gamemap::CHUNK_SIZE as i32 + z as i32,
+                            ),
+                            block_entity_id,
+                        );
                     } // If block_id is negative or out of bound, treat as air.
                 }
             }
