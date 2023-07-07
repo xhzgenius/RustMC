@@ -29,6 +29,14 @@ pub struct Creeper;
 #[derive(Component)]
 pub struct Torch;
 
+/// A "tag" component for the entity type "HuTao".
+#[derive(Component)]
+pub struct HuTao;
+
+/// A "tag" component for the entity type "Chicken".
+#[derive(Component)]
+pub struct Chicken;
+
 /**
 A ref-counted pointer with lock, pointing to the entity's EntityStatus.
 Use this pointer like this:

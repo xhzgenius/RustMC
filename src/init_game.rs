@@ -241,6 +241,20 @@ fn get_collision_box_by_type(entity_type: &str, meshes: &mut ResMut<Assets<Mesh>
                     .into(),
             ),
         );
+        collision_boxes_initialized.insert(
+            "HuTao",
+            meshes.add(
+                shape::Box::from_corners(Vec3::new(-0.2, 0., -0.2), Vec3::new(0.2, 0.4, 0.2))
+                    .into(),
+            ),
+        );
+        collision_boxes_initialized.insert(
+            "Chicken",
+            meshes.add(
+                shape::Box::from_corners(Vec3::new(-0.5, 0., -0.5), Vec3::new(0.5, 1.0, 0.5))
+                    .into(),
+            ),
+        );
         *COLLISION_BOXES.lock().unwrap() = Some(collision_boxes_initialized);
     }
     return COLLISION_BOXES
@@ -260,6 +274,8 @@ fn find_model_name_by_type(entity_type: &str) -> &str {
         "Player" => "minecraft_steve.glb",
         "MainPlayer" => "minecraft_steve.glb",
         "Torch" => "minecraft_torch.glb",
+        "HuTao" => "genshin_impact_hu_tao.glb",
+        "Chicken" => "strong_chicken.glb",
         _ => panic!("Unknown entity type: {}", entity_type),
     }
 }
@@ -276,7 +292,15 @@ fn get_proper_model_transform_by_type(entity_type: &str) -> Transform {
         "MainPlayer" => Transform::from_scale(Vec3::new(0.065, 0.065, 0.065))
             .with_translation(Vec3::new(0., 0.9, 0.))
             .with_rotation(Quat::from_rotation_y(PI)),
-        "Torch" => Transform::from_scale(Vec3::new(0.5, 0.5, 0.5)),
+        "Torch" => Transform::from_scale(Vec3::new(0.5, 0.5, 0.5))
+            .with_translation(Vec3::new(0., 0.9, 0.))
+            .with_rotation(Quat::from_rotation_y(PI)),
+        "HuTao" => Transform::from_scale(Vec3::new(1.2, 1.2, 1.2))
+            .with_translation(Vec3::new(0., 0., 0.))
+            .with_rotation(Quat::from_rotation_y(PI)),
+        "Chicken" => Transform::from_scale(Vec3::new(1.0, 1.0, 1.0))
+            .with_translation(Vec3::new(0., 0.9, 0.))
+            .with_rotation(Quat::from_rotation_y(PI)),
         _ => panic!("Unknown entity type: {}", entity_type),
     }
 }
@@ -299,6 +323,8 @@ fn insert_entity_tags(entity_commands: &mut EntityCommands, entity_type: &str) {
         "Player" => entity_commands.insert((entities::Entity, player::Player)),
         "Creeper" => entity_commands.insert((entities::Entity, entities::Creeper)),
         "Torch" => entity_commands.insert((entities::Entity, entities::Torch)),
+        "HuTao" => entity_commands.insert((entities::Entity, entities::HuTao)),
+        "Chicken" => entity_commands.insert((entities::Entity, entities::Chicken)),
         _ => panic!("Unknown entity type: {}", entity_type),
     };
 }

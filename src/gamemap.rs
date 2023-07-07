@@ -180,9 +180,9 @@ pub fn new_gamemap() -> GameMap {
     let mut new_map = HashMap::new();
 
     let mut range = rand::thread_rng();
-    let seed1 = range.gen_range(0..u32::MAX);
-    let seed2 = range.gen_range(0..u32::MAX);
-    let seed3 = range.gen_range(0..u32::MAX);
+    let seed1 = range.gen_range(0, u32::MAX);
+    let seed2 = range.gen_range(0, u32::MAX);
+    let seed3 = range.gen_range(0, u32::MAX);
     for x in -3..3 {
         for z in -3..3 {
             let (xx, zz) = ((x + 3) as usize, (z + 3) as usize);
@@ -202,13 +202,16 @@ pub fn new_gamemap() -> GameMap {
                     })));
             }
             if rand::random::<f32>() < 0.5 {
-
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new((x * 16) as f32 + rand::random::<f32>() * 16., proper_y, (z * 16) as f32 + rand::random::<f32>() * 16.),
+                        position: Vec3::new(
+                            (x * 16) as f32 + rand::random::<f32>() * 16.,
+                            proper_y,
+                            (z * 16) as f32 + rand::random::<f32>() * 16.,
+                        ),
                         rotation: PI * 0.75,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
@@ -232,9 +235,28 @@ pub fn new_gamemap() -> GameMap {
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
-                        entity_type: "Creeper".to_string(),
+                        entity_type: "HuTao".to_string(),
+                        health: 10000,
+                        position: Vec3::new(
+                            (x * 16) as f32 + rand::random::<f32>() * 16.,
+                            proper_y,
+                            (z * 16) as f32 + rand::random::<f32>() * 16.,
+                        ),
+                        rotation: PI * 0.25,
+                        scaling: Vec3::new(1., 1., 1.),
+                        velocity: Vec3::new(0., 0., 0.),
+                        attack_cd: 0.,
+                    })));
+                chunk
+                    .entities
+                    .push(Arc::new(Mutex::new(entities::EntityStatus {
+                        entity_type: "Chicken".to_string(),
                         health: 20,
-                        position: Vec3::new((x * 16) as f32 + rand::random::<f32>() * 16., proper_y, (z * 16) as f32 + rand::random::<f32>() * 16.),
+                        position: Vec3::new(
+                            (x * 16) as f32 + rand::random::<f32>() * 16.,
+                            proper_y,
+                            (z * 16) as f32 + rand::random::<f32>() * 16.,
+                        ),
                         rotation: PI * 0.25,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
@@ -273,7 +295,7 @@ pub fn find_gamemap(world_name: &str) -> bool {
     println!("Loading world from {}", filename);
     match std::fs::read_to_string(filename) {
         Ok(serialized_gamemap) => true,
-        Err(err) => false
+        Err(err) => false,
     }
 }
 /**
