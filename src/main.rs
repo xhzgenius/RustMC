@@ -3,9 +3,9 @@ mod control;
 mod entities;
 mod gamemap;
 mod init_game;
+mod interaction;
 mod player;
 mod ui;
-mod interaction;
 
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
@@ -43,7 +43,13 @@ fn main() {
     app.add_state::<GameState>();
     app.init_resource::<gamemap::GameMap>();
     app.init_resource::<gamemap::WorldName>();
-    app.add_plugins(DefaultPlugins);
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "RustMC!".to_string(),
+            ..Default::default()
+        }),
+        ..Default::default()
+    }));
     app.add_plugins(InGamePluginGroup);
     app.add_plugin(ui::UIPlugin);
     app.run();
