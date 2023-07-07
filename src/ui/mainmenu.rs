@@ -94,7 +94,11 @@ pub fn exit_main_menu(
 /**
 Initialize the main menu UI on index page.
  */
-pub fn init_main_menu_index(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn init_main_menu_index(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>, 
+    mut world_name: ResMut<gamemap::WorldName>
+) {
     // Initialize the text.
     commands.spawn((
         MainMenuIndexUI,
@@ -140,8 +144,17 @@ pub fn init_main_menu_index(mut commands: Commands, asset_server: Res<AssetServe
             },
         ))
         .with_children(|parent| {
+            let mut text: String;
+            match world_name.name {
+                Some(_) =>{
+                    text = "Continue".to_string();
+                }
+                _ =>{
+                    text = "Start!".to_string();
+                }
+            }
             parent.spawn(TextBundle::from_section(
-                "Start!",
+                text,
                 TextStyle {
                     font: asset_server.load("fonts/指尖隶书体.ttf"),
                     font_size: 50.0,
