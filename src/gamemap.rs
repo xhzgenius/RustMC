@@ -258,10 +258,22 @@ pub fn load_gamemap(world_name: &str) -> GameMap {
             Ok(gamemap) => gamemap,
             Err(err) => panic!("Failed to deserialize map: {}", err),
         },
-        Err(err) => panic!("Falied to load map from file: {}", err),
+        Err(err) => new_gamemap(),
     }
 }
 
+/**
+Find whether there is a game map from a file.
+Returns true if the file is successfully loaded. Otherwise retur false.
+*/
+pub fn find_gamemap(world_name: &str) -> bool {
+    let filename = format!("./saves/{}.json", world_name);
+    println!("Loading world from {}", filename);
+    match std::fs::read_to_string(filename) {
+        Ok(serialized_gamemap) => true,
+        Err(err) => false
+    }
+}
 /**
 Save a game map to a file.
 Returns Ok(()) if the map is successfully saved. Otherwise returns the error.

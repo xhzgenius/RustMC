@@ -56,6 +56,10 @@ impl Plugin for UIPlugin {
         // React to clicks.
         app.add_systems((
             main_menu_index_start_button_reaction.in_set(OnUpdate(MainMenuUIState::Index)),
+            main_menu_index_choose_world_button_reaction.in_set(OnUpdate(MainMenuUIState::Index)),
+            main_menu_index_choose_world_button1_reaction.in_set(OnUpdate(MainMenuUIState::ChooseWorld)),
+            main_menu_index_choose_world_button2_reaction.in_set(OnUpdate(MainMenuUIState::ChooseWorld)),
+            main_menu_index_choose_world_button3_reaction.in_set(OnUpdate(MainMenuUIState::ChooseWorld)),
         ));
 
         // In-game UI.

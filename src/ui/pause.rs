@@ -145,34 +145,34 @@ pub(crate) fn init_pause_index(mut commands: Commands, asset_server: Res<AssetSe
                 },
             ));
         });
-    commands
-        .spawn((
-            PauseIndexUI,
-            PauseIndexUIExitButton,
-            ButtonBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    position: UiRect {
-                        bottom: Val::Percent(10.),
-                        right: Val::Percent(50.),
-                        ..default()
-                    },
-                    ..default()
-                },
-                background_color: BackgroundColor(Color::BLACK),
-                ..default()
-            },
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                " Exit ",
-                TextStyle {
-                    font: asset_server.load("fonts/指尖隶书体.ttf"),
-                    font_size: 50.0,
-                    color: Color::WHITE,
-                },
-            ));
-        });
+    // commands
+    //     .spawn((
+    //         PauseIndexUI,
+    //         PauseIndexUIExitButton,
+    //         ButtonBundle {
+    //             style: Style {
+    //                 position_type: PositionType::Absolute,
+    //                 position: UiRect {
+    //                     bottom: Val::Percent(10.),
+    //                     right: Val::Percent(50.),
+    //                     ..default()
+    //                 },
+    //                 ..default()
+    //             },
+    //             background_color: BackgroundColor(Color::BLACK),
+    //             ..default()
+    //         },
+    //     ))
+    //     .with_children(|parent| {
+    //         parent.spawn(TextBundle::from_section(
+    //             " Exit ",
+    //             TextStyle {
+    //                 font: asset_server.load("fonts/指尖隶书体.ttf"),
+    //                 font_size: 50.0,
+    //                 color: Color::WHITE,
+    //             },
+    //         ));
+    //     });
 }
 
 /**

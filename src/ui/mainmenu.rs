@@ -4,6 +4,7 @@ use std::{
     f32::consts::PI,
     sync::{Arc, Mutex},
 };
+use chrono::*;
 
 use super::mainmenu;
 use super::chooseworld;
@@ -221,14 +222,37 @@ pub fn clear_main_menu_index(mut commands: Commands, query_ui: Query<Entity, Wit
 pub fn main_menu_index_start_button_reaction(
     mut interaction_query: Query<&Interaction, With<MainMenuIndexUIStartButton>>,
     mut game_state: ResMut<NextState<GameState>>,
+    mut world_name: ResMut<gamemap::WorldName>,
 ) {
     for interaction in &mut interaction_query {
         match *interaction {
             Interaction::Clicked => {
+                match world_name.name {
+                    Some(_) =>{}
+                    _ =>{
+                        let date_time = Utc::now().naive_utc();
+                        *world_name = gamemap::WorldName {
+                            name: Some(format!("New World_{}", date_time.timestamp().to_string()).to_string()),
+                        };
+                    }
+                }  
                 game_state.set(GameState::Loading);
             }
             _ => {}
         }
     }
 }
-// to do.
+/// Enter the Choose World state .
+pub fn main_menu_index_choose_world_button_reaction(
+    mut interaction_query: Query<&Interaction, With<MainMenuIndexUIChooseWorldButton>>,
+    mut game_state: ResMut<NextState<MainMenuUIState>>,
+) {
+    for interaction in &mut interaction_query {
+        match *interaction {
+            Interaction::Clicked => {            
+                game_state.set(MainMenuUIState::ChooseWorld);
+            }
+            _ => {}
+        }
+    }
+}
