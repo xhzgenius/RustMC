@@ -12,7 +12,7 @@ pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (walk, rotate, head_up, lock_mouse_cursor, operate, random_move_player, random_move_creeper).in_set(OnUpdate(GameState::InGame)),
+            (walk, rotate, head_up, lock_mouse_cursor, operate, random_move).in_set(OnUpdate(GameState::InGame)),
         );
         app.add_systems((
             hide_cursor.in_schedule(OnEnter(GameState::InGame)),
@@ -68,15 +68,15 @@ fn walk(
     }
 }
 
-// Random walk for players.
-fn random_move_player(
+// Random walk for players and creepers.
+fn random_move(
     keys: Res<Input<KeyCode>>,
     mut query_player_status: Query<
-        (&mut entities::EntityStatusPointer, &Transform),
-        With<Player>,
+        (&mut entities::EntityStatusPointer, &mut Transform),
+        (With<entities::Entity>, Without<player::MainPlayer>)
     >,
 ){
-    for (status_pointer, transform) in &mut query_player_status {
+    for (status_pointer, mut transform) in &mut query_player_status {
         if rand::random::<f32>() < 0.05 {
             let mut status = status_pointer.pointer.lock().unwrap();
             if rand::random::<f32>() < 0.5 {
@@ -84,33 +84,14 @@ fn random_move_player(
                 status.velocity.z = 0.;
             }
             else{
-                status.velocity.x = 5. *(rand::random::<f32>() - 0.5);
-                status.velocity.z = 5. *(rand::random::<f32>() - 0.5);
+                let angle = 2. * PI * rand::random::<f32>();
+                transform.rotate_y(angle);
+                let direction = transform.forward();
+                let abs_velocity = 5. * rand::random::<f32>();
+                status.velocity.x = direction[0] * abs_velocity;
+                status.velocity.z = direction[2] * abs_velocity;
             }
         }  
-    }
-}
-
-// Random walk for creepers.
-fn random_move_creeper(
-    keys: Res<Input<KeyCode>>,
-    mut query_player_status: Query<
-        (&mut entities::EntityStatusPointer, &Transform),
-        With<Creeper>,
-    >,
-){
-    for (status_pointer, transform) in &mut query_player_status {
-        if rand::random::<f32>() < 0.025 {
-            let mut status = status_pointer.pointer.lock().unwrap();
-            if rand::random::<f32>() < 0.5 {
-                status.velocity.x = 0.;
-                status.velocity.z = 0.;
-            }
-            else{
-                status.velocity.x = 5. *(rand::random::<f32>() - 0.5);
-                status.velocity.z = 5. *(rand::random::<f32>() - 0.5);
-            }
-        } 
     }
 }
 

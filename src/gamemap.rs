@@ -133,9 +133,10 @@ fn random_chunk(xx: usize, zz: usize, seed1: u32, seed2: u32, seed3: u32) -> Chu
             height[x][z] = (noise_1 + noise_2 + noise_3) as usize + CHUNK_HEIGHT / 2;
             height[x][z] = usize::max(1, min(CHUNK_HEIGHT, height[x][z]));
 
-            for y in 0..height[x][z] {
+            for y in 0..height[x][z] - 1 {
                 blocks[x][y][z] = 210;
             }
+            blocks[x][height[x][z] - 1][z] = 361;
             for y in height[x][z]..CHUNK_HEIGHT {
                 blocks[x][y][z] = -1;
             }
