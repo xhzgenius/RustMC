@@ -133,9 +133,10 @@ fn random_chunk(xx: usize, zz: usize, seed1: u32, seed2: u32, seed3: u32) -> Chu
             height[x][z] = (noise_1 + noise_2 + noise_3) as usize + CHUNK_HEIGHT / 2;
             height[x][z] = usize::max(1, min(CHUNK_HEIGHT, height[x][z]));
 
-            for y in 0..height[x][z] {
+            for y in 0..height[x][z] - 1 {
                 blocks[x][y][z] = 210;
             }
+            blocks[x][height[x][z] - 1][z] = 361;
             for y in height[x][z]..CHUNK_HEIGHT {
                 blocks[x][y][z] = -1;
             }
@@ -201,12 +202,13 @@ pub fn new_gamemap() -> GameMap {
                     })));
             }
             if rand::random::<f32>() < 0.5 {
+
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new((x * 16) as f32 + 5., proper_y, (z * 16) as f32 + -10.),
+                        position: Vec3::new((x * 16) as f32 + rand::random::<f32>() * 16., proper_y, (z * 16) as f32 + rand::random::<f32>() * 16.),
                         rotation: PI * 0.75,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
@@ -218,9 +220,9 @@ pub fn new_gamemap() -> GameMap {
                         entity_type: "Player".to_string(),
                         health: 20,
                         position: Vec3::new(
-                            (x * 16) as f32 + 10.,
+                            (x * 16) as f32 + rand::random::<f32>() * 16.,
                             proper_y,
-                            (z * 16) as f32 + -10.,
+                            (z * 16) as f32 + rand::random::<f32>() * 16.,
                         ),
                         rotation: PI * 1.5,
                         scaling: Vec3::new(1., 1., 1.),
@@ -232,7 +234,7 @@ pub fn new_gamemap() -> GameMap {
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new((x * 16) as f32 + 10., proper_y, (z * 16) as f32 + -8.),
+                        position: Vec3::new((x * 16) as f32 + rand::random::<f32>() * 16., proper_y, (z * 16) as f32 + rand::random::<f32>() * 16.),
                         rotation: PI * 0.25,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),

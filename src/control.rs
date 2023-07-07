@@ -2,6 +2,8 @@ use std::f32::consts::PI;
 use std::sync::{Arc, Mutex};
 
 use crate::*;
+use crate::entities::Creeper;
+use crate::player::Player;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
@@ -10,7 +12,7 @@ pub struct ControlPlugin;
 impl Plugin for ControlPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            (walk, rotate, head_up, lock_mouse_cursor, operate).in_set(OnUpdate(GameState::InGame)),
+            (walk, rotate, head_up, lock_mouse_cursor, operate, random_move).in_set(OnUpdate(GameState::InGame)),
         );
         app.add_systems((
             hide_cursor.in_schedule(OnEnter(GameState::InGame)),
@@ -63,6 +65,33 @@ fn walk(
     // we can check multiple at once with `.any_*`
     if keys.any_pressed([KeyCode::LShift, KeyCode::RShift]) {
         // Either the left or right shift are being held down
+    }
+}
+
+// Random walk for players and creepers.
+fn random_move(
+    keys: Res<Input<KeyCode>>,
+    mut query_player_status: Query<
+        (&mut entities::EntityStatusPointer, &mut Transform),
+        (With<entities::Entity>, Without<player::MainPlayer>)
+    >,
+){
+    for (status_pointer, mut transform) in &mut query_player_status {
+        if rand::random::<f32>() < 0.05 {
+            let mut status = status_pointer.pointer.lock().unwrap();
+            if rand::random::<f32>() < 0.5 {
+                status.velocity.x = 0.;
+                status.velocity.z = 0.;
+            }
+            else{
+                let angle = 2. * PI * rand::random::<f32>();
+                transform.rotate_y(angle);
+                let direction = transform.forward();
+                let abs_velocity = 5. * rand::random::<f32>();
+                status.velocity.x = direction[0] * abs_velocity;
+                status.velocity.z = direction[2] * abs_velocity;
+            }
+        }  
     }
 }
 
