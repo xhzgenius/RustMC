@@ -19,6 +19,7 @@ walkdir = "2.3.3"
 rand = "*"
 rand_distr = "*"
 noise ="*"
+chrono = "*"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
