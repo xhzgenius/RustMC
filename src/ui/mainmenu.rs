@@ -256,3 +256,20 @@ pub fn main_menu_index_choose_world_button_reaction(
         }
     }
 }
+
+/// Exit .
+pub fn main_menu_index_exit_button_reaction(
+    mut interaction_query: Query<&Interaction, With<MainMenuIndexUIExitButton>>,
+    mut game_state: ResMut<NextState<MainMenuUIState>>,
+) {
+    for interaction in &mut interaction_query {
+        match *interaction {
+            Interaction::Clicked => {            
+                use std::process;
+                process::exit(0);
+            }
+            _ => {}
+        }
+    }
+    
+}
