@@ -47,9 +47,9 @@ pub struct GameMap {
 impl GameMap {
     /// Query a block according to the coordinates.
     pub fn query_block_by_xyz(&self, xyz: Vec3) -> Option<i32> {
-        let x = xyz[0] as i32;
-        let y = xyz[1] as usize;
-        let z = xyz[2] as i32;
+        let x = xyz[0].floor() as i32;
+        let y = xyz[1].floor() as usize;
+        let z = xyz[2].floor() as i32;
         let chunk_x = x.div_euclid(16);
         let chunk_z = z.div_euclid(16);
         let newx: usize = (x-16*chunk_x).try_into().unwrap();
