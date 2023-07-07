@@ -61,8 +61,9 @@ impl Plugin for UIPlugin {
         // In-game UI.
         app.add_state::<InGameUIState>();
         app.add_system(init_in_game_ui_text.in_schedule(OnEnter(GameState::InGame)));
-        app.add_system(update_in_game_ui_cursor.in_set(OnUpdate(GameState::InGame)));
+        app.add_system(update_in_game_ui_cursor.in_schedule(OnEnter(GameState::InGame)));
         app.add_system(update_in_game_ui_text.in_set(OnUpdate(GameState::InGame)));
+        app.add_system(clear_in_game_ui.in_schedule(OnExit(GameState::InGame)));
 
         // React to esc in Game state.
         app.add_system(in_game_pause_reaction.in_set(OnUpdate(GameState::InGame)));

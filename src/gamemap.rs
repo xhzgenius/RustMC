@@ -50,9 +50,8 @@ impl GameMap {
         let chunk_z = z.div_euclid(16);
         return (chunk_x, chunk_z);
     }
-    /// Converts a block's position to index in chunk if it exists. 
-    pub fn to_integer(&self, xyz: Vec3) -> Option<(usize, usize, usize)>
-    {
+    /// Converts a block's position to index in chunk if it exists.
+    pub fn to_integer(&self, xyz: Vec3) -> Option<(usize, usize, usize)> {
         let x = xyz[0].floor() as i32;
         let y = xyz[1].floor() as usize;
         let z = xyz[2].floor() as i32;
@@ -187,26 +186,28 @@ pub fn new_gamemap() -> GameMap {
         for z in -3..3 {
             let (xx, zz) = ((x + 3) as usize, (z + 3) as usize);
             let mut chunk = random_chunk(xx, zz, seed1, seed2, seed3);
+            let proper_y: f32 = CHUNK_HEIGHT as f32;
             if x == 0 && z == 0 {
-                let proper_y: f32 = CHUNK_HEIGHT as f32;
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "MainPlayer".to_string(),
                         health: 20,
                         position: Vec3::new(0., proper_y, 0.),
-                        rotation: PI * 0.,
+                        rotation: PI * 0.0,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                         attack_cd: 0.,
                     })));
+            }
+            if rand::random::<f32>() < 0.5 {
                 chunk
                     .entities
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new(5., proper_y, -10.),
-                        rotation: PI * 0.,
+                        position: Vec3::new((x * 16) as f32 + 5., proper_y, (z * 16) as f32 + -10.),
+                        rotation: PI * 0.75,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                         attack_cd: 0.,
@@ -216,8 +217,12 @@ pub fn new_gamemap() -> GameMap {
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Player".to_string(),
                         health: 20,
-                        position: Vec3::new(10., proper_y, -10.),
-                        rotation: PI * 0.,
+                        position: Vec3::new(
+                            (x * 16) as f32 + 10.,
+                            proper_y,
+                            (z * 16) as f32 + -10.,
+                        ),
+                        rotation: PI * 1.5,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                         attack_cd: 0.,
@@ -227,8 +232,8 @@ pub fn new_gamemap() -> GameMap {
                     .push(Arc::new(Mutex::new(entities::EntityStatus {
                         entity_type: "Creeper".to_string(),
                         health: 20,
-                        position: Vec3::new(10., proper_y, -8.),
-                        rotation: PI * 0.,
+                        position: Vec3::new((x * 16) as f32 + 10., proper_y, (z * 16) as f32 + -8.),
+                        rotation: PI * 0.25,
                         scaling: Vec3::new(1., 1., 1.),
                         velocity: Vec3::new(0., 0., 0.),
                         attack_cd: 0.,

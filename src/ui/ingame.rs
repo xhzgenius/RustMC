@@ -1,15 +1,15 @@
 use crate::{init_game::GameCamera, *};
-use bevy::{prelude::*, ecs::world};
+use bevy::{ecs::world, prelude::*};
 use std::{
     f32::consts::PI,
     sync::{Arc, Mutex},
 };
 
-use super::mainmenu::*;
 use super::chooseworld::*;
+use super::mainmenu::*;
 // use super::ingame::*;
-use super::setting::*;
 use super::pause::*;
+use super::setting::*;
 use super::*;
 
 /**
@@ -22,8 +22,9 @@ pub enum InGameUIState {
     Pause,
 }
 
-
 // Below are the group identifiers of the buttons, texts, etc.
+#[derive(Component)]
+pub struct InGameUI;
 /// A "name" for the bottom-left text area in-game UI.
 #[derive(Component)]
 pub struct InGameUIBottomLeftText;
@@ -31,7 +32,6 @@ pub struct InGameUIBottomLeftText;
 /// A "name" for the center cursor in-game UI.
 #[derive(Component)]
 pub struct InGameUICenterCursor;
-
 
 // Below are the behaviors when state changes.
 
@@ -41,6 +41,8 @@ Initialize the in-game UI text at the bottom-left corner of the screen.
  */
 pub fn init_in_game_ui_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
+        InGameUIBottomLeftText,
+        InGameUI,
         TextBundle::from_section(
             // Accepts a `String` or any type that converts into a `String`, such as `&str`
             "hello\nbevy!",
@@ -61,7 +63,6 @@ pub fn init_in_game_ui_text(mut commands: Commands, asset_server: Res<AssetServe
             },
             ..default()
         }),
-        InGameUIBottomLeftText,
     ));
 }
 
@@ -112,6 +113,7 @@ pub fn update_in_game_ui_cursor(
     query_camera: Query<(&Transform, &GlobalTransform), With<init_game::GameCamera>>,
 ) {
     commands.spawn((
+        InGameUI,
         MainMenuIndexUI,
         TextBundle::from_section(
             // Accepts a `String` or any type that converts into a `String`, such as `&str`
@@ -137,11 +139,25 @@ pub fn update_in_game_ui_cursor(
     ));
 }
 
-
 // Below is how to react to clicks.
 /// From in_game state to pause state
-pub fn in_game_pause_reaction(key: Res<Input<KeyCode>>, mut game_state: ResMut<NextState<GameState>>) {
+pub fn in_game_pause_reaction(
+    key: Res<Input<KeyCode>>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
     if key.pressed(KeyCode::Escape) {
         game_state.set(GameState::Pause);
+    }
+}
+
+/**
+Clears all in-game UI.
+ */
+pub fn clear_in_game_ui(
+    mut commands: Commands,
+    query_ui: Query<Entity, With<InGameUI>>,
+) {
+    for ui in &query_ui {
+        commands.entity(ui).despawn_recursive();
     }
 }

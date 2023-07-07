@@ -153,7 +153,7 @@ fn die(
         }
     }
     // Remove dead entities from GameMap. 
-    for (chunk_key, chunk) in gamemap.map.iter_mut() {
+    for (_chunk_key, chunk) in gamemap.map.iter_mut() {
         let mut entities: Vec<_> = chunk.entities.drain(..).collect();
         for entity in entities.drain(..) {
             if entity.lock().unwrap().health>0 {

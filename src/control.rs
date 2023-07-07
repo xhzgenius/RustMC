@@ -125,7 +125,7 @@ fn head_up(
     }
 }
 
-const PLAYER_ATTACK_CD: f32 = 0.6;
+const PLAYER_ATTACK_CD: f32 = 0.5;
 fn operate(
     clicks_input: Res<Input<MouseButton>>,
     entity_event_writer: EventWriter<interaction::GameEntityEvent>,
