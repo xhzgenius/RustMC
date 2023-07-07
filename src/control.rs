@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::*;
 use crate::entities::Creeper;
+use crate::player::Player;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
@@ -72,7 +73,7 @@ fn random_move_player(
     keys: Res<Input<KeyCode>>,
     mut query_player_status: Query<
         (&mut entities::EntityStatusPointer, &Transform),
-        With<player::Player>,
+        With<Player>,
     >,
 ){
     for (status_pointer, transform) in &mut query_player_status {
